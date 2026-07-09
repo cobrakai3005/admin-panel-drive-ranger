@@ -114,7 +114,7 @@ export default function UsersPage() {
             status: filters.status || "active", // send "active" or "inactive"
           })
         }
-        createItem={createUserApi}
+        // createItem={createUserApi}
         updateItem={updateUserApi}
         deleteItem={deleteUserApi}
         toggleStatus={deactivateUserApi}
