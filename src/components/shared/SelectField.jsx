@@ -51,7 +51,7 @@ export default function SelectField({
 
   return (
     <div className={field.colSpan === 2 ? "col-span-2" : ""}>
-      <label>{field.label}</label>
+      {/* <label>{field.label}</label> */}
 
       <Select
         options={options}

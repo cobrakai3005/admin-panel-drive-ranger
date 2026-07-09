@@ -288,6 +288,16 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
 
   // ----- SELECT -----
   if (field.type === "select") {
+    if (field.onCreate) {
+      return (
+        <CreatableSelectField
+          field={field}
+          value={value}
+          form={form}
+          onChange={onChange}
+        />
+      );
+    }
     return (
       <div className="space-y-1.5">
         <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -563,7 +573,132 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
   );
 }
 
-// Vehicle selector component – cascading make → model → generations with accumulation
+// Creatable select — adds "+" button + inline form for on-the-fly creation
+function CreatableSelectField({ field, value, form, onChange }) {
+  const [creating, setCreating] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
+  const [createImage, setCreateImage] = useState(null);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [selectKey, setSelectKey] = useState(0);
+
+  const resetForm = () => {
+    setCreateName("");
+    setCreateDesc("");
+    setCreateImage(null);
+  };
+
+  const handleCreate = async () => {
+    if (!field.onCreate || !createName.trim()) return;
+    setCreateLoading(true);
+    try {
+      const payload = { name: createName.trim() };
+      if (createDesc.trim()) payload.description = createDesc.trim();
+      if (createImage) payload.image = createImage;
+      const res = await field.onCreate(payload, form);
+      const newItem = res?.data || res;
+      onChange(newItem.id);
+      resetForm();
+      setCreating(false);
+      setSelectKey((k) => k + 1);
+      toast.success(`${field.label} created`);
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || `Failed to create ${field.label}`,
+      );
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1">
+        <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+          {field.label}
+          {field.required && " *"}
+        </label>
+        {(!field.dependsOn || form[field.dependsOn]) && (
+          <button
+            type="button"
+            onClick={() => setCreating(!creating)}
+            className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+          >
+            <Plus size={12} />
+          </button>
+        )}
+      </div>
+      <FormSelect
+        key={selectKey}
+        field={field}
+        value={value}
+        form={form}
+        onChange={onChange}
+      />
+        {creating && (
+          <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <p className="text-xs font-semibold text-slate-600">
+              New {field.label}
+            </p>
+            <input
+              type="text"
+              value={createName}
+              onChange={(e) => setCreateName(e.target.value)}
+              placeholder="Name"
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+            <textarea
+              value={createDesc}
+              onChange={(e) => setCreateDesc(e.target.value)}
+              placeholder="Description (optional)"
+              rows={2}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+            />
+            <div>
+              <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+                Image (optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
+                className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
+              />
+              {createImage && (
+                <img
+                  src={URL.createObjectURL(createImage)}
+                  alt="preview"
+                  className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
+                />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={createLoading || !createName.trim()}
+                className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 hover:bg-primary/90"
+              >
+                {createLoading ? "Creating..." : "Create"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setCreating(false);
+                }}
+                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:bg-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Vehicle selector component – cascading make → model → generations with accumulation
 function VehicleSelectorField({
   field,
   value,
@@ -585,6 +720,8 @@ function VehicleSelectorField({
   // Inline creation state
   const [creating, setCreating] = useState(null);
   const [createName, setCreateName] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
+  const [createImage, setCreateImage] = useState(null);
   const [createYearFrom, setCreateYearFrom] = useState("");
   const [createYearTo, setCreateYearTo] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
@@ -716,6 +853,8 @@ function VehicleSelectorField({
   const resetCreateForm = () => {
     setCreating(null);
     setCreateName("");
+    setCreateDesc("");
+    setCreateImage(null);
     setCreateYearFrom("");
     setCreateYearTo("");
   };
@@ -724,7 +863,10 @@ function VehicleSelectorField({
     if (!field.onCreateMake || !createName.trim()) return;
     setCreateLoading(true);
     try {
-      const res = await field.onCreateMake(createName.trim());
+      const payload = { name: createName.trim() };
+      if (createDesc.trim()) payload.description = createDesc.trim();
+      if (createImage) payload.image = createImage;
+      const res = await field.onCreateMake(payload);
       const newMake = res?.data || res;
       // Refresh makes and select the new one
       const data = await field.loadMakeOptions();
@@ -749,7 +891,10 @@ function VehicleSelectorField({
     if (!field.onCreateModel || !createName.trim() || !selectedMakeId) return;
     setCreateLoading(true);
     try {
-      const res = await field.onCreateModel(selectedMakeId, createName.trim());
+      const payload = { name: createName.trim() };
+      if (createDesc.trim()) payload.description = createDesc.trim();
+      if (createImage) payload.image = createImage;
+      const res = await field.onCreateModel(selectedMakeId, payload);
       const newModel = res?.data || res;
       const data = await field.loadModelOptions(selectedMakeId);
       setModels(data || []);
@@ -768,12 +913,14 @@ function VehicleSelectorField({
     if (!field.onCreateGeneration || !selectedModelId) return;
     setCreateLoading(true);
     try {
-      const res = await field.onCreateGeneration(
-        selectedModelId,
-        createName.trim() || null,
-        createYearFrom,
-        createYearTo || null,
-      );
+      const payload = {
+        generation_name: createName.trim() || null,
+        year_from: createYearFrom,
+        year_to: createYearTo || null,
+      };
+      if (createDesc.trim()) payload.description = createDesc.trim();
+      if (createImage) payload.image = createImage;
+      const res = await field.onCreateGeneration(selectedModelId, payload);
       const newGen = res?.data || res;
       const data = await field.loadGenerationOptions(selectedModelId);
       setGenOptions(data || []);
@@ -789,13 +936,24 @@ function VehicleSelectorField({
     }
   };
 
+  const toggleCreate = (type) => {
+    if (creating === type) {
+      resetCreateForm();
+    } else {
+      setCreateDesc("");
+      setCreateImage(null);
+      setCreateName("");
+      setCreateYearFrom("");
+      setCreateYearTo("");
+      setCreating(type);
+    }
+  };
+
   const makeOptions = makes.map((m) => ({ value: m.id, label: m.name }));
   const modelOptions = models.map((m) => ({ value: m.id, label: m.name }));
   const genSelectOptions = genOptions.map((g) => ({
     value: g.id,
-    label: g.generation_name
-      ? `${g.generation_name} (${g.year_from}-${g.year_to || "Present"})`
-      : `${g.year_from}-${g.year_to || "Present"}`,
+    label: `${g.year_from} - ${g.year_to || "Present"}`,
   }));
 
   const selectedGenReact = genSelectOptions.filter((o) =>
@@ -827,7 +985,7 @@ function VehicleSelectorField({
             {field.onCreateMake && (
               <button
                 type="button"
-                onClick={() => setCreating(creating === "make" ? null : "make")}
+                onClick={() => toggleCreate("make")}
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
                 <Plus size={12} />
@@ -842,29 +1000,57 @@ function VehicleSelectorField({
             placeholder="Select Make..."
           />
           {creating === "make" && (
-            <div className="mt-2 flex gap-2 items-center">
+            <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <p className="text-xs font-semibold text-slate-600">New Make</p>
               <input
                 type="text"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                placeholder="New make name"
-                className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                placeholder="Name"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
-              <button
-                type="button"
-                onClick={handleCreateMake}
-                disabled={createLoading || !createName.trim()}
-                className="px-2 py-1 rounded-lg bg-primary text-white text-xs font-medium disabled:opacity-50"
-              >
-                {createLoading ? "..." : "Create"}
-              </button>
-              <button
-                type="button"
-                onClick={resetCreateForm}
-                className="p-1 rounded hover:bg-slate-100 text-slate-400"
-              >
-                <X size={12} />
-              </button>
+              <textarea
+                value={createDesc}
+                onChange={(e) => setCreateDesc(e.target.value)}
+                placeholder="Description (optional)"
+                rows={2}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+              />
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+                  Image (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
+                  className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
+                />
+                {createImage && (
+                  <img
+                    src={URL.createObjectURL(createImage)}
+                    alt="preview"
+                    className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
+                  />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateMake}
+                  disabled={createLoading || !createName.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 hover:bg-primary/90"
+                >
+                  {createLoading ? "Creating..." : "Create"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetCreateForm}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:bg-white"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -876,7 +1062,7 @@ function VehicleSelectorField({
               <button
                 type="button"
                 onClick={() =>
-                  setCreating(creating === "model" ? null : "model")
+                  toggleCreate("model")
                 }
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
@@ -897,29 +1083,57 @@ function VehicleSelectorField({
             }
           />
           {creating === "model" && (
-            <div className="mt-2 flex gap-2 items-center">
+            <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <p className="text-xs font-semibold text-slate-600">New Model</p>
               <input
                 type="text"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
-                placeholder="New model name"
-                className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                placeholder="Name"
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
-              <button
-                type="button"
-                onClick={handleCreateModel}
-                disabled={createLoading || !createName.trim()}
-                className="px-2 py-1 rounded-lg bg-primary text-white text-xs font-medium disabled:opacity-50"
-              >
-                {createLoading ? "..." : "Create"}
-              </button>
-              <button
-                type="button"
-                onClick={resetCreateForm}
-                className="p-1 rounded hover:bg-slate-100 text-slate-400"
-              >
-                <X size={12} />
-              </button>
+              <textarea
+                value={createDesc}
+                onChange={(e) => setCreateDesc(e.target.value)}
+                placeholder="Description (optional)"
+                rows={2}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+              />
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+                  Image (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
+                  className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
+                />
+                {createImage && (
+                  <img
+                    src={URL.createObjectURL(createImage)}
+                    alt="preview"
+                    className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
+                  />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateModel}
+                  disabled={createLoading || !createName.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 hover:bg-primary/90"
+                >
+                  {createLoading ? "Creating..." : "Create"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetCreateForm}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:bg-white"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -931,7 +1145,7 @@ function VehicleSelectorField({
               <button
                 type="button"
                 onClick={() =>
-                  setCreating(creating === "generation" ? null : "generation")
+                  toggleCreate("generation")
                 }
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
@@ -967,43 +1181,73 @@ function VehicleSelectorField({
             </button>
           </div>
           {creating === "generation" && (
-            <div className="mt-2 flex gap-2 items-center">
-              <input
-                type="text"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Generation name"
-                className="flex-1 px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <p className="text-xs font-semibold text-slate-600">New Generation</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  placeholder="Name (optional)"
+                  className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                <input
+                  type="number"
+                  value={createYearFrom}
+                  onChange={(e) => setCreateYearFrom(e.target.value)}
+                  placeholder="Year from"
+                  className="w-24 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+                <input
+                  type="number"
+                  value={createYearTo}
+                  onChange={(e) => setCreateYearTo(e.target.value)}
+                  placeholder="Year to"
+                  className="w-24 px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+              </div>
+              <textarea
+                value={createDesc}
+                onChange={(e) => setCreateDesc(e.target.value)}
+                placeholder="Description (optional)"
+                rows={2}
+                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
-              <input
-                type="number"
-                value={createYearFrom}
-                onChange={(e) => setCreateYearFrom(e.target.value)}
-                placeholder="Year from"
-                className="w-20 px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              <input
-                type="number"
-                value={createYearTo}
-                onChange={(e) => setCreateYearTo(e.target.value)}
-                placeholder="Year to"
-                className="w-20 px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-              <button
-                type="button"
-                onClick={handleCreateGeneration}
-                disabled={createLoading || !createYearFrom}
-                className="px-2 py-1 rounded-lg bg-primary text-white text-xs font-medium disabled:opacity-50"
-              >
-                {createLoading ? "..." : "Create"}
-              </button>
-              <button
-                type="button"
-                onClick={resetCreateForm}
-                className="p-1 rounded hover:bg-slate-100 text-slate-400"
-              >
-                <X size={12} />
-              </button>
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+                  Image (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
+                  className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
+                />
+                {createImage && (
+                  <img
+                    src={URL.createObjectURL(createImage)}
+                    alt="preview"
+                    className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
+                  />
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateGeneration}
+                  disabled={createLoading || !createYearFrom}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 hover:bg-primary/90"
+                >
+                  {createLoading ? "Creating..." : "Create"}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetCreateForm}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:bg-white"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>

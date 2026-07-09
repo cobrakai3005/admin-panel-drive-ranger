@@ -1,7 +1,11 @@
+import api from "../../config/axios";
 import CrudPage from "../../components/shared/CrudPage";
-import { fetchCategoryOptions } from "../../api/categories";
-import { fetchSubcategoryOptions } from "../../api/subcategories";
-import { fetchBrandOptions } from "../../api/brands";
+import { fetchCategoryOptions, createCategory } from "../../api/categories";
+import {
+  fetchSubcategoryOptions,
+  createSubcategory,
+} from "../../api/subcategories";
+import { fetchBrandOptions, createBrand } from "../../api/brands";
 import {
   getAllProductsApi,
   createProductApi,
@@ -287,29 +291,45 @@ export default function ProductsAdminPage() {
           loadCompatibilities: (productId) =>
             getCompatibilityByProduct(productId),
           removeCompatibility: (id) => removeCompatibility(id),
-          onCreateMake: async (name) => {
+          onCreateMake: async (payload) => {
             const fd = new FormData();
-            fd.append("name", name);
+            fd.append("name", payload.name);
+            if (payload.description)
+              fd.append("description", payload.description);
+            if (payload.image) fd.append("logo_url", payload.image);
             return createMake(fd);
           },
-          onCreateModel: async (makeId, name) => {
+          onCreateModel: async (makeId, payload) => {
             const fd = new FormData();
             fd.append("make_id", makeId);
-            fd.append("name", name);
+            fd.append("name", payload.name);
+            if (payload.description)
+              fd.append("description", payload.description);
+            if (payload.image) fd.append("model_image_url", payload.image);
             return createModel(fd);
           },
-          onCreateGeneration: async (
-            modelId,
-            generation_name,
-            year_from,
-            year_to,
-          ) =>
-            createGeneration({
+          onCreateGeneration: async (modelId, payload) => {
+            const hasExtra = payload.description || payload.image;
+            if (hasExtra) {
+              const fd = new FormData();
+              fd.append("model_id", modelId);
+              fd.append("generation_name", payload.generation_name || "");
+              fd.append("year_from", payload.year_from);
+              fd.append("year_to", payload.year_to || "");
+              if (payload.description)
+                fd.append("description", payload.description);
+              if (payload.image) fd.append("image", payload.image);
+              return api
+                .post("/vehicle-generations/create_generation", fd)
+                .then((r) => r.data);
+            }
+            return createGeneration({
               model_id: modelId,
-              generation_name,
-              year_from,
-              year_to,
-            }),
+              generation_name: payload.generation_name,
+              year_from: payload.year_from,
+              year_to: payload.year_to,
+            });
+          },
         },
 
         {
@@ -318,6 +338,14 @@ export default function ProductsAdminPage() {
           type: "select",
           required: true,
           loadOptions: () => fetchCategoryOptions(),
+          onCreate: async (payload) => {
+            const fd = new FormData();
+            fd.append("name", payload.name);
+            if (payload.description)
+              fd.append("description", payload.description);
+            if (payload.image) fd.append("image_url", payload.image);
+            return createCategory(fd);
+          },
         },
 
         {
@@ -327,6 +355,15 @@ export default function ProductsAdminPage() {
           required: true,
           dependsOn: "category_id",
           loadOptions: (categoryId) => fetchSubcategoryOptions(categoryId),
+          onCreate: async (payload, form) => {
+            const fd = new FormData();
+            fd.append("name", payload.name);
+            if (payload.description)
+              fd.append("description", payload.description);
+            if (payload.image) fd.append("image_url", payload.image);
+            fd.append("category_id", form.category_id);
+            return createSubcategory(fd);
+          },
         },
 
         {
@@ -335,6 +372,14 @@ export default function ProductsAdminPage() {
           type: "select",
           required: true,
           loadOptions: () => fetchBrandOptions(),
+          onCreate: async (payload) => {
+            const fd = new FormData();
+            fd.append("name", payload.name);
+            if (payload.description)
+              fd.append("description", payload.description);
+            if (payload.image) fd.append("logo_url", payload.image);
+            return createBrand(fd);
+          },
         },
 
         {
@@ -512,7 +557,9 @@ export default function ProductsAdminPage() {
         is_front: form.is_front ? 1 : 0,
 
         // Handle vehicle compatibility IDs
-        vehicle_generation_ids: form.is_universal ? [] : form.vehicle_generation_ids || [],
+        vehicle_generation_ids: form.is_universal
+          ? []
+          : form.vehicle_generation_ids || [],
       })}
     />
   );

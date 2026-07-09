@@ -98,11 +98,11 @@ export default function BrandsPage() {
         },
 
         { key: "status", label: "Status" },
-        { key: "website", label: "Website" },
+        // { key: "website", label: "Website" },
       ]}
       formFields={[
         { name: "name", label: "Name", required: true, colSpan: 2 },
-        { name: "website", label: "Website", colSpan: 2 },
+        // { name: "website", label: "Website", colSpan: 2 },
 
         {
           name: "status",
