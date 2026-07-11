@@ -206,6 +206,11 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
   // Remove existing image
   const handleRemoveImage = useCallback(
     async (imageId) => {
+      if (field.onPendingImageDelete) {
+        field.onPendingImageDelete(imageId);
+        setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
+        return;
+      }
       if (field.deleteImage) {
         try {
           await field.deleteImage(imageId);
@@ -222,7 +227,7 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
       setExistingImages([]);
       onChange(null);
     },
-    [field.deleteImage, onChange],
+    [field.deleteImage, field.onPendingImageDelete, onChange],
   );
 
   // Remove selected preview (FIX: don't try to modify file input programmatically)
@@ -430,7 +435,9 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
                   alt="Existing"
                   className="w-20 h-20 object-cover rounded-lg border border-slate-200"
                 />
-                {(field.deleteImage || !field.loadImages) && (
+                {(field.deleteImage ||
+                  field.onPendingImageDelete ||
+                  !field.loadImages) && (
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(img.id)}
@@ -490,17 +497,50 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
     );
   }
 
+  // ----- CHECKBOX-GROUP -----
+  if (field.type === "checkbox-group") {
+    const checkboxes = field.checkboxes || [];
+    return (
+      <div
+        className={`flex flex-row flex-wrap gap-2 md:flex-col ${
+          field.colSpan === 2 ? "col-span-2" : ""
+        }`}
+      >
+        {checkboxes.map((cb) => (
+          <label
+            key={cb.name}
+            className="flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors select-none flex-1 md:flex-none"
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(form[cb.name])}
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, [cb.name]: e.target.checked }))
+              }
+              className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 shrink-0"
+            />
+            <span className="leading-snug">{cb.label}</span>
+          </label>
+        ))}
+      </div>
+    );
+  }
+
   // ----- CHECKBOX -----
   if (field.type === "checkbox") {
     return (
-      <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+      <label
+        className={`flex items-center gap-3 py-2 px-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors select-none ${
+          field.colSpan === 2 ? "col-span-2" : ""
+        }`}
+      >
         <input
           type="checkbox"
           checked={Boolean(value)}
           onChange={(e) => onChange(e.target.checked)}
-          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4"
+          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 shrink-0"
         />
-        {field.label}
+        <span className="leading-snug">{field.label}</span>
       </label>
     );
   }
@@ -635,70 +675,79 @@ function CreatableSelectField({ field, value, form, onChange }) {
         form={form}
         onChange={onChange}
       />
-        {creating && (
-          <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-            <p className="text-xs font-semibold text-slate-600">
-              New {field.label}
-            </p>
+      {creating && (
+        <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <p className="text-xs font-semibold text-slate-600">
+            New {field.label}
+          </p>
+          <input
+            type="text"
+            value={createName}
+            onChange={(e) => setCreateName(e.target.value)}
+            placeholder="Name"
+            className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          />
+          <textarea
+            value={createDesc}
+            onChange={(e) => setCreateDesc(e.target.value)}
+            placeholder="Description (optional)"
+            rows={2}
+            className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+          />
+          <div>
+            <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+              Image (optional)
+            </label>
             <input
-              type="text"
-              value={createName}
-              onChange={(e) => setCreateName(e.target.value)}
-              placeholder="Name"
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
+              className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
             />
-            <textarea
-              value={createDesc}
-              onChange={(e) => setCreateDesc(e.target.value)}
-              placeholder="Description (optional)"
-              rows={2}
-              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-            />
-            <div>
-              <label className="block text-[10px] font-semibold text-slate-500 mb-1">
-                Image (optional)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
-                className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
-              />
-              {createImage && (
+            {createImage && (
+              <div className="relative inline-block mt-2">
                 <img
                   src={URL.createObjectURL(createImage)}
                   alt="preview"
-                  className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
+                  className="h-16 w-16 object-cover rounded-lg border border-slate-200"
                 />
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleCreate}
-                disabled={createLoading || !createName.trim()}
-                className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 hover:bg-primary/90"
-              >
-                {createLoading ? "Creating..." : "Create"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  resetForm();
-                  setCreating(false);
-                }}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:bg-white"
-              >
-                Cancel
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateImage(null)}
+                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                >
+                  <X size={10} strokeWidth={3} />
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    );
-  }
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={createLoading || !createName.trim()}
+              className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold disabled:opacity-50 hover:bg-primary/90"
+            >
+              {createLoading ? "Creating..." : "Create"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                setCreating(false);
+              }}
+              className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:bg-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-  // Vehicle selector component – cascading make → model → generations with accumulation
+// Vehicle selector component – cascading make → model → generations with accumulation
 function VehicleSelectorField({
   field,
   value,
@@ -836,17 +885,14 @@ function VehicleSelectorField({
   };
 
   const handleRemoveItem = (item) => {
-    if (item.isExisting && field.removeCompatibility && item.id) {
-      field.removeCompatibility(item.id).catch((err) => {
-        console.error("Failed to remove compatibility:", err);
-        toast.error("Failed to remove compatibility");
-      });
-    }
     const updated = accumulated.filter(
       (i) => i.vehicle_generation_id !== item.vehicle_generation_id,
     );
     setAccumulated(updated);
     onChange(updated.map((item) => item.vehicle_generation_id));
+    if (item.isExisting && item.id && field.onPendingRemoval) {
+      field.onPendingRemoval(item.id);
+    }
   };
 
   // Inline creation handlers
@@ -1027,11 +1073,20 @@ function VehicleSelectorField({
                   className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
                 />
                 {createImage && (
-                  <img
-                    src={URL.createObjectURL(createImage)}
-                    alt="preview"
-                    className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
-                  />
+                  <div className="relative inline-block mt-2">
+                    <img
+                      src={URL.createObjectURL(createImage)}
+                      alt="preview"
+                      className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCreateImage(null)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                    >
+                      <X size={10} strokeWidth={3} />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -1061,9 +1116,7 @@ function VehicleSelectorField({
             {field.onCreateModel && selectedMakeId && (
               <button
                 type="button"
-                onClick={() =>
-                  toggleCreate("model")
-                }
+                onClick={() => toggleCreate("model")}
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
                 <Plus size={12} />
@@ -1110,11 +1163,20 @@ function VehicleSelectorField({
                   className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
                 />
                 {createImage && (
-                  <img
-                    src={URL.createObjectURL(createImage)}
-                    alt="preview"
-                    className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
-                  />
+                  <div className="relative inline-block mt-2">
+                    <img
+                      src={URL.createObjectURL(createImage)}
+                      alt="preview"
+                      className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCreateImage(null)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                    >
+                      <X size={10} strokeWidth={3} />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -1144,9 +1206,7 @@ function VehicleSelectorField({
             {field.onCreateGeneration && selectedModelId && (
               <button
                 type="button"
-                onClick={() =>
-                  toggleCreate("generation")
-                }
+                onClick={() => toggleCreate("generation")}
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
                 <Plus size={12} />
@@ -1182,7 +1242,9 @@ function VehicleSelectorField({
           </div>
           {creating === "generation" && (
             <div className="mt-2 p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-              <p className="text-xs font-semibold text-slate-600">New Generation</p>
+              <p className="text-xs font-semibold text-slate-600">
+                New Generation
+              </p>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -1224,11 +1286,20 @@ function VehicleSelectorField({
                   className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
                 />
                 {createImage && (
-                  <img
-                    src={URL.createObjectURL(createImage)}
-                    alt="preview"
-                    className="mt-2 h-16 w-16 object-cover rounded-lg border border-slate-200"
-                  />
+                  <div className="relative inline-block mt-2">
+                    <img
+                      src={URL.createObjectURL(createImage)}
+                      alt="preview"
+                      className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCreateImage(null)}
+                      className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                    >
+                      <X size={10} strokeWidth={3} />
+                    </button>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -1321,6 +1392,7 @@ export default function CrudPage({
   preparePayload,
   onEditRow,
   onFilterChange,
+  onModalClose,
   initialFilterState = {},
 }) {
   const [rows, setRows] = useState([]);
@@ -1398,6 +1470,14 @@ export default function CrudPage({
       formFields.forEach((f) => {
         if (row[f.name] !== undefined && row[f.name] !== null) {
           next[f.name] = row[f.name];
+        }
+        // Populate nested checkbox values from checkbox-group fields
+        if (f.type === "checkbox-group" && f.checkboxes) {
+          f.checkboxes.forEach((cb) => {
+            if (row[cb.name] !== undefined && row[cb.name] !== null) {
+              next[cb.name] = row[cb.name];
+            }
+          });
         }
       });
       setForm(next);
@@ -1666,13 +1746,16 @@ export default function CrudPage({
       {formFields.length > 0 && (createItem || updateItem) && (
         <Modal
           open={modalOpen}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            onModalClose?.();
+            setModalOpen(false);
+          }}
           title={editingRow ? `Edit ${title}` : `Create ${title}`}
           wide={modalWide}
         >
           <form
             onSubmit={handleSubmit}
-            className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4"
+            className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4"
           >
             {formFields.map((field) => (
               <FieldRenderer
@@ -1687,7 +1770,10 @@ export default function CrudPage({
             <div className="col-span-2 flex justify-end gap-2 pt-4 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => setModalOpen(false)}
+                onClick={() => {
+                  onModalClose?.();
+                  setModalOpen(false);
+                }}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100"
               >
                 Cancel
@@ -1708,4 +1794,31 @@ export default function CrudPage({
   );
 }
 
-export { buildFormData };
+
+function ImageCell({ src, alt, className = "" }) {
+  const [open, setOpen] = useState(false);
+  if (!src) return null;
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="shrink-0">
+        <img
+          src={src}
+          alt={alt || ""}
+          className={`w-8 h-8 rounded-lg object-cover border border-slate-200 hover:opacity-80 transition-opacity ${className}`}
+        />
+      </button>
+      <Modal open={open} onClose={() => setOpen(false)}>
+        <div className="p-4 flex items-center justify-center">
+          <img
+            src={src}
+            alt={alt || ""}
+            className="max-w-full max-h-[80vh] object-contain rounded-lg"
+          />
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+export { buildFormData, ImageCell };
+

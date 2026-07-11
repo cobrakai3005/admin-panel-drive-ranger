@@ -129,9 +129,9 @@ export default function ProductImagesAdminPage() {
   const handleToggleStatus = async (imageId) => {
     try {
       const ok = await confirmToggle({
-        title: "Toggle  this  Image",
+        title: "Change the status of  this  Image",
         content: "This action cannot be undone.",
-        okText: "Toggle",
+        okText: "Change Status",
         okType: "danger",
       });
       if (!ok) return;

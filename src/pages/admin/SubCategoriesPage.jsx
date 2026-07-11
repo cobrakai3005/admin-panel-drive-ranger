@@ -1,4 +1,5 @@
-import CrudPage from "../../components/shared/CrudPage";
+import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
+
 import { fetchCategoryOptions } from "../../api/categories";
 import {
   getSubcategories,
@@ -99,13 +100,7 @@ export default function SubCategoriesPage() {
           label: "Name",
           render: (row) => (
             <div className="flex items-center gap-3">
-              {row.image_url && (
-                <img
-                  src={row.image_url}
-                  alt=""
-                  className="w-8 h-8 rounded-lg object-cover"
-                />
-              )}
+             <ImageCell src={row.image_url}/>
               <span className="font-medium">{row.name}</span>
             </div>
           ),

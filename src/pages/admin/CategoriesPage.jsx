@@ -1,4 +1,4 @@
-import CrudPage from "../../components/shared/CrudPage";
+import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
 import {
   getCategories,
   createCategory,
@@ -20,7 +20,6 @@ const defaultForm = {
 // Filter component for Categories
 function CategoryFilters({ filterState, setFilterState }) {
   const [searchInput, setSearchInput] = useState(filterState.search || "");
-
 
   // Debounce the search term
   useEffect(() => {
@@ -106,13 +105,9 @@ export default function CategoriesPage() {
           label: "Name",
           render: (row) => (
             <div className="flex items-center gap-3">
-              {row.image_url && (
-                <img
-                  src={row.image_url}
-                  alt=""
-                  className="w-8 h-8 rounded-lg object-cover"
-                />
-              )}
+            
+              <ImageCell src={row.image_url} />
+
               <span className="font-medium">{row.name}</span>
             </div>
           ),

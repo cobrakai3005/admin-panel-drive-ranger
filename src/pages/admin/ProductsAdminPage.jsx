@@ -1,5 +1,5 @@
 import api from "../../config/axios";
-import CrudPage from "../../components/shared/CrudPage";
+import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
 import { fetchCategoryOptions, createCategory } from "../../api/categories";
 import {
   fetchSubcategoryOptions,
@@ -15,7 +15,7 @@ import {
   getProductImagesApi,
   deleteProductImageApi,
 } from "../../api/products";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import {
   fetchMakeOptions,
@@ -191,6 +191,24 @@ export default function ProductsAdminPage() {
     return result.data;
   }, []);
 
+  const pendingRemovalRef = useRef([]);
+  const pendingImageDeletionsRef = useRef([]);
+
+  const updateItemHandlerWithRemovals = useCallback(async (id, data) => {
+    const removals = pendingRemovalRef.current;
+    pendingRemovalRef.current = [];
+    for (const removalId of removals) {
+      await removeCompatibility(removalId);
+    }
+    const imageDeletions = pendingImageDeletionsRef.current;
+    pendingImageDeletionsRef.current = [];
+    for (const imageId of imageDeletions) {
+      await deleteProductImageApi(imageId);
+    }
+    const result = await updateProductApi(id, data);
+    return result.data;
+  }, []);
+
   return (
     <CrudPage
       title="Products"
@@ -201,17 +219,24 @@ export default function ProductsAdminPage() {
       fileFields={["product_media"]}
       fetchList={fetchList}
       createItem={createItemHandler}
-      updateItem={updateItemHandler}
+      updateItem={updateItemHandlerWithRemovals}
       deleteItem={deleteItemHandler}
       toggleStatus={toggleStatusHandler}
       FilterComponent={ProductFilters}
+      onModalClose={() => {
+        pendingRemovalRef.current = [];
+        pendingImageDeletionsRef.current = [];
+      }}
       columns={[
         { key: "no", label: "#" },
         {
           key: "name",
           label: "Product",
           render: (row) => (
-            <span className="font-medium text-slate-800">{row.name}</span>
+            <div className="flex items-center gap-3">
+              <ImageCell src={row.media?.[0]?.image_url} />
+              <span className="font-medium text-slate-800">{row.name}</span>
+            </div>
           ),
         },
         {
@@ -290,12 +315,10 @@ export default function ProductsAdminPage() {
             fetchGenerationOptionsByModel(modelId),
           loadCompatibilities: (productId) =>
             getCompatibilityByProduct(productId),
-          removeCompatibility: (id) => removeCompatibility(id),
+          onPendingRemoval: (id) => pendingRemovalRef.current.push(id),
           onCreateMake: async (payload) => {
             const fd = new FormData();
             fd.append("name", payload.name);
-            if (payload.description)
-              fd.append("description", payload.description);
             if (payload.image) fd.append("logo_url", payload.image);
             return createMake(fd);
           },
@@ -308,28 +331,13 @@ export default function ProductsAdminPage() {
             if (payload.image) fd.append("model_image_url", payload.image);
             return createModel(fd);
           },
-          onCreateGeneration: async (modelId, payload) => {
-            const hasExtra = payload.description || payload.image;
-            if (hasExtra) {
-              const fd = new FormData();
-              fd.append("model_id", modelId);
-              fd.append("generation_name", payload.generation_name || "");
-              fd.append("year_from", payload.year_from);
-              fd.append("year_to", payload.year_to || "");
-              if (payload.description)
-                fd.append("description", payload.description);
-              if (payload.image) fd.append("image", payload.image);
-              return api
-                .post("/vehicle-generations/create_generation", fd)
-                .then((r) => r.data);
-            }
-            return createGeneration({
+          onCreateGeneration: async (modelId, payload) =>
+            createGeneration({
               model_id: modelId,
               generation_name: payload.generation_name,
               year_from: payload.year_from,
               year_to: payload.year_to,
-            });
-          },
+            }),
         },
 
         {
@@ -375,8 +383,6 @@ export default function ProductsAdminPage() {
           onCreate: async (payload) => {
             const fd = new FormData();
             fd.append("name", payload.name);
-            if (payload.description)
-              fd.append("description", payload.description);
             if (payload.image) fd.append("logo_url", payload.image);
             return createBrand(fd);
           },
@@ -390,7 +396,8 @@ export default function ProductsAdminPage() {
           accept: "image/*",
           colSpan: 2,
           loadImages: (productId) => getProductImagesApi(productId),
-          deleteImage: (imageId) => deleteProductImageApi(imageId),
+          onPendingImageDelete: (imageId) =>
+            pendingImageDeletionsRef.current.push(imageId),
         },
 
         {
@@ -506,21 +513,14 @@ export default function ProductsAdminPage() {
         },
 
         {
-          name: "is_available",
-          label: "Available for Purchase",
-          type: "checkbox",
-        },
-
-        {
-          name: "is_featured",
-          label: "Featured Product",
-          type: "checkbox",
-        },
-
-        {
-          name: "is_front",
-          label: "Show on Homepage",
-          type: "checkbox",
+          name: "status_toggles",
+          type: "checkbox-group",
+          colSpan: 2,
+          checkboxes: [
+            { name: "is_available", label: "Available for Purchase" },
+            { name: "is_featured", label: "Featured Product" },
+            { name: "is_front", label: "Show on Homepage" },
+          ],
         },
 
         {

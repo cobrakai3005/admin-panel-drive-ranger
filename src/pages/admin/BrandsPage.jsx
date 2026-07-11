@@ -1,4 +1,5 @@
-import CrudPage from "../../components/shared/CrudPage";
+import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
+
 import {
   getBrands,
   createBrand,
@@ -85,13 +86,11 @@ export default function BrandsPage() {
           label: "Brand",
           render: (row) => (
             <div className="flex items-center gap-3">
-              {row.logo_url && (
-                <img
-                  src={row.logo_url}
-                  alt=""
-                  className="w-8 h-8 rounded-lg object-contain bg-slate-50"
-                />
-              )}
+              <ImageCell
+                src={row.logo_url}
+                className="object-contain bg-slate-50"
+              />
+
               <span className="font-medium">{row.name}</span>
             </div>
           ),

@@ -7,3 +7,6 @@ export const getAllOrders = (params) =>
 
 export const updateOrderStatus = (id, data) =>
   api.put(`/orders/admin/${id}/status`, data).then(unwrap);
+
+export const getOrderDashboardStats = () =>
+  api.get("/orders/dashboard-stats").then(unwrap);

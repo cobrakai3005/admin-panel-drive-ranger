@@ -1,4 +1,5 @@
-import CrudPage from "../../components/shared/CrudPage";
+import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
+
 import { fetchMakeOptions } from "../../api/vehicles";
 import {
   getModels,
@@ -77,12 +78,20 @@ export default function VehicleModelsPage() {
       fetchList={fetchList}
       createItem={createModel}
       updateItem={updateModel}
-     
       FilterComponent={ModelFilter}
       deleteItem={deleteModel}
       columns={[
         { key: "no", label: "Serial" },
-        { key: "name", label: "Model" },
+        {
+          key: "name",
+          label: "Model",
+          render: (row) => (
+            <div className="flex items-center gap-3">
+              <ImageCell src={row.model_image_url} />
+              <span className="font-medium">{row.name}</span>
+            </div>
+          ),
+        },
         { key: "make_name", label: "Make Name" },
         { key: "description", label: "Description" },
         { key: "status", label: "Status" },

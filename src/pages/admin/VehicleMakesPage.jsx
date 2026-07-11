@@ -1,4 +1,5 @@
-import CrudPage from "../../components/shared/CrudPage";
+import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
+
 import {
   getMakes,
   createMake,
@@ -13,7 +14,7 @@ function MakeFilters({ filterState, setFilterState }) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setFilterState(prev => ({
+      setFilterState((prev) => ({
         ...prev,
         search: searchInput,
       }));
@@ -39,10 +40,10 @@ function MakeFilters({ filterState, setFilterState }) {
       <Select
         options={statusOptions}
         value={statusOptions.find(
-          o => o.value === (filterState.status || "active")
+          (o) => o.value === (filterState.status || "active"),
         )}
         onChange={(selected) =>
-          setFilterState(prev => ({
+          setFilterState((prev) => ({
             ...prev,
             status: selected.value,
           }))
@@ -78,13 +79,8 @@ export default function VehicleMakesPage() {
           label: "Make",
           render: (row) => (
             <div className="flex items-center gap-3">
-              {row.logo_url && (
-                <img
-                  src={row.logo_url}
-                  alt=""
-                  className="w-8 h-8 object-contain"
-                />
-              )}
+              <ImageCell src={row.logo_url} className="object-contain" />
+
               <span className="font-medium">{row.name}</span>
             </div>
           ),
