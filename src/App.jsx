@@ -21,7 +21,7 @@ const OrdersPage = lazy(() => import("./pages/admin/OrdersPage"));
 const CouponsPage = lazy(() => import("./pages/admin/CouponsPage"));
 const TransactionsPage = lazy(() => import("./pages/admin/TransactionsPage"));
 const ReturnsPage = lazy(() => import("./pages/admin/ReturnsPage"));
-const WarrantyPage = lazy(() => import("./pages/admin/WarrantyPage"));
+// const WarrantyPage = lazy(() => import("./pages/admin/WarrantyPage"));
 const ReviewsPage = lazy(() => import("./pages/admin/ReviewsPage"));
 const AuditLogsPage = lazy(() => import("./pages/admin/AuditLogsPage"));
 const VehicleMakesPage = lazy(() => import("./pages/admin/VehicleMakesPage"));
@@ -161,14 +161,14 @@ const router = createBrowserRouter(
           }
         />
 
-        <Route
+        {/* <Route
           path="warranty"
           element={
             <Suspense fallback={<Loader />}>
               <WarrantyPage />
             </Suspense>
           }
-        />
+        /> */}
 
         <Route
           path="shipments"

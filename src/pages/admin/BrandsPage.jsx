@@ -1,10 +1,10 @@
 import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
-
 import {
   getBrands,
   createBrand,
   updateBrand,
   deleteBrand,
+  restoreBrand,
 } from "../../api/brands";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -78,6 +78,9 @@ export default function BrandsPage() {
       createItem={createBrand}
       updateItem={updateBrand}
       deleteItem={deleteBrand}
+      deleteEntityLabel="Brand"
+      deleteChildWarning="associated products"
+      restoreItem={restoreBrand}
       FilterComponent={BrandFilters}
       columns={[
         { key: "no", label: "Serial" },
@@ -90,18 +93,17 @@ export default function BrandsPage() {
                 src={row.logo_url}
                 className="object-contain bg-slate-50"
               />
-
               <span className="font-medium">{row.name}</span>
             </div>
           ),
         },
 
         { key: "status", label: "Status" },
-        // { key: "website", label: "Website" },
+        { key: "website", label: "Website" },
       ]}
       formFields={[
         { name: "name", label: "Name", required: true, colSpan: 2 },
-        // { name: "website", label: "Website", colSpan: 2 },
+        { name: "website", label: "Website", colSpan: 2 },
 
         {
           name: "status",

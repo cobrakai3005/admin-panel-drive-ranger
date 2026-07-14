@@ -14,7 +14,8 @@ export const createCategory = (data) =>
       headers: { "Content-Type": "multipart/form-data" },
     })
     .then(unwrap);
-
+export const restoreCategory = (id) =>
+  api.get(`/categories/restore/${id}`).then(unwrap);
 export const updateCategory = (id, data) =>
   api
     .put(`/categories/update_category/${id}`, data, {

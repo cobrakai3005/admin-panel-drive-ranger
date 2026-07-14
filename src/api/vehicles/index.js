@@ -17,7 +17,8 @@ export const createMake = (data) =>
       headers: { "Content-Type": "multipart/form-data" },
     })
     .then(unwrap);
-
+export const restoreMake = (id) =>
+  api.get(`/vehicle-makes/restore/${id}`).then(unwrap);
 export const updateMake = (id, data) =>
   api
     .put(`/vehicle-makes/update_make/${id}`, data, {
@@ -53,7 +54,8 @@ export const updateModel = (id, data) =>
 
 export const deleteModel = (id) =>
   api.delete(`/vehicle-models/delete_model/${id}`).then(unwrap);
-
+export const restoreModel = (id) =>
+  api.get(`/vehicle-models/restore/${id}`).then(unwrap);
 // ============================================
 // VEHICLE GENERATIONS
 // ============================================
@@ -98,7 +100,8 @@ export const getAvailableVehicleGenerations = async (productId) => {
     name: `${item.make_name} ${item.model_name} (${item.year_from}-${item.year_to ?? "Present"})`,
   }));
 };
-
+export const restoreGeneration = (id) =>
+  api.get(`/vehicle-generations/restore/${id}`).then(unwrap);
 // ============================================
 // VEHICLE COMPATIBILITY
 // ============================================

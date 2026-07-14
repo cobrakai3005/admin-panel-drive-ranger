@@ -66,7 +66,7 @@ export const navGroups = [
     label: "Support",
     items: [
       { path: "/reviews", icon: Star, label: "Reviews" },
-      { path: "/warranty", icon: Shield, label: "Warranty" },
+      // { path: "/warranty", icon: Shield, label: "Warranty" },
     ],
   },
   // {

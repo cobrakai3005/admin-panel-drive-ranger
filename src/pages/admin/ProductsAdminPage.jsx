@@ -12,6 +12,7 @@ import {
   updateProductApi,
   deleteProductApi,
   toggleProductStatusApi,
+  restoreProductApi,
   getProductImagesApi,
   deleteProductImageApi,
 } from "../../api/products";
@@ -222,6 +223,7 @@ export default function ProductsAdminPage() {
       updateItem={updateItemHandlerWithRemovals}
       deleteItem={deleteItemHandler}
       toggleStatus={toggleStatusHandler}
+      restoreItem={restoreProductApi}
       FilterComponent={ProductFilters}
       onModalClose={() => {
         pendingRemovalRef.current = [];

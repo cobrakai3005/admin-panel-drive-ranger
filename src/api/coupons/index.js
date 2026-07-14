@@ -9,7 +9,8 @@ export const createCoupon = (data) =>
   api.post("/coupons/create-template", data).then(unwrap);
 export const updateCoupon = (id, data) =>
   api.put(`/coupons/update-template/${id}`, data).then(unwrap);
-
+export const getCouponById = (id) =>
+  api.get(`/coupons/get_by_id/${id}`).then(unwrap);
 export const getUserCouponsAdmin = (userId) =>
   api.get(`/coupons/user-coupons/${userId}`).then(unwrap);
 

@@ -5,6 +5,8 @@ const unwrap = (res) => res.data;
 export const getTransactionsByOrder = (orderId) =>
   api.get(`/transactions/order/${orderId}`).then(unwrap);
 
+export const getTransactionDashboardStats = () =>
+  api.get("/transactions/dashboard-stats").then(unwrap);
 
 export const getTransactions = (params) =>
   api.get(`/transactions`, { params }).then(unwrap);

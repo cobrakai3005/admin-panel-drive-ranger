@@ -1,5 +1,4 @@
 import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
-
 import { fetchCategoryOptions } from "../../api/categories";
 import {
   getSubcategories,
@@ -8,6 +7,7 @@ import {
   deleteSubcategory,
   toggleSubcategoryStatus,
   deleteSubcategoryImage,
+  restoreSubcategory,
 } from "../../api/subcategories";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -91,7 +91,10 @@ export default function SubCategoriesPage() {
       createItem={createSubcategory}
       updateItem={updateSubcategory}
       deleteItem={deleteSubcategory}
+      deleteEntityLabel="Subcategory"
+      deleteChildWarning="associated products"
       toggleStatus={toggleSubcategoryStatus}
+      restoreItem={restoreSubcategory}
       FilterComponent={SubCategoryFilters}
       columns={[
         { key: "no", label: "Serial" },
@@ -100,7 +103,7 @@ export default function SubCategoriesPage() {
           label: "Name",
           render: (row) => (
             <div className="flex items-center gap-3">
-             <ImageCell src={row.image_url}/>
+              <ImageCell src={row.image_url} />
               <span className="font-medium">{row.name}</span>
             </div>
           ),

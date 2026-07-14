@@ -7,7 +7,8 @@ export const getSubcategories = (params) =>
 
 export const getSubcategoryById = (id) =>
   api.get(`/sub-categories/get_subcategory_by_id/${id}`).then(unwrap);
-
+export const restoreSubcategory = (id) =>
+  api.get(`/sub-categories/restore/${id}`).then(unwrap);
 export const createSubcategory = (data) =>
   api
     .post("/sub-categories/create_subcategory", data, {

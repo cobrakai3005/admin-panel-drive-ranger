@@ -6,6 +6,7 @@ import {
   deleteCategory,
   toggleCategoryStatus,
   deleteCategoryImage,
+  restoreCategory,
 } from "../../api/categories";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -90,7 +91,10 @@ export default function CategoriesPage() {
       createItem={createCategory}
       updateItem={updateCategory}
       deleteItem={deleteCategory}
+      deleteEntityLabel="Category"
+      deleteChildWarning="associated products"
       toggleStatus={toggleCategoryStatus}
+      restoreItem={restoreCategory}
       // filters={(filterState, setFilterState) => (
       //   <CategoryFilters
       //     filterState={filterState}
@@ -105,9 +109,7 @@ export default function CategoriesPage() {
           label: "Name",
           render: (row) => (
             <div className="flex items-center gap-3">
-            
               <ImageCell src={row.image_url} />
-
               <span className="font-medium">{row.name}</span>
             </div>
           ),

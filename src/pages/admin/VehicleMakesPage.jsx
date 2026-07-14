@@ -1,10 +1,10 @@
 import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
-
 import {
   getMakes,
   createMake,
   updateMake,
   deleteMake,
+  restoreMake,
 } from "../../api/vehicles";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -72,6 +72,9 @@ export default function VehicleMakesPage() {
       createItem={createMake}
       updateItem={updateMake}
       deleteItem={deleteMake}
+      deleteEntityLabel="Vehicle Make"
+      deleteChildWarning="associated models and generations"
+      restoreItem={restoreMake}
       columns={[
         { key: "no", label: "Serial" },
         {
@@ -80,7 +83,6 @@ export default function VehicleMakesPage() {
           render: (row) => (
             <div className="flex items-center gap-3">
               <ImageCell src={row.logo_url} className="object-contain" />
-
               <span className="font-medium">{row.name}</span>
             </div>
           ),

@@ -1,11 +1,11 @@
 import CrudPage, { ImageCell } from "../../components/shared/CrudPage";
-
 import { fetchMakeOptions } from "../../api/vehicles";
 import {
   getModels,
   createModel,
   updateModel,
   deleteModel,
+  restoreModel,
 } from "../../api/vehicles";
 import { useCallback, useEffect, useState } from "react";
 import Select from "react-select";
@@ -78,8 +78,12 @@ export default function VehicleModelsPage() {
       fetchList={fetchList}
       createItem={createModel}
       updateItem={updateModel}
+     
       FilterComponent={ModelFilter}
       deleteItem={deleteModel}
+      deleteEntityLabel="Vehicle Model"
+      deleteChildWarning="associated generations"
+      restoreItem={restoreModel}
       columns={[
         { key: "no", label: "Serial" },
         {

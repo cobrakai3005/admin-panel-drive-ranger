@@ -10,7 +10,10 @@ export const fetchProductOptions = async (status = "active") => {
   const res = await getAllProductsApi({ limit: 100, status });
   return res.data || [];
 };
-
+// Restore product
+export async function restoreProductApi(productId) {
+  return api.get(`/products/restore/${productId}`);
+}
 // Get product by ID or slug
 export async function getProductByIdOrSlugApi(identifier) {
   return api.get(`/products/get_product_by_id/${identifier}`);

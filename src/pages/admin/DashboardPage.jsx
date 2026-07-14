@@ -6,21 +6,26 @@ import {
   Tags,
   Car,
   ClipboardList,
-  Clock3,
-  Truck,
-  CircleCheckBig,
   CreditCard,
-  ShoppingBag,
 } from "lucide-react";
-import { Link } from "react-router-dom";
-
 import { getCategories } from "../../api/categories";
 import { getAllProductsApi } from "../../api/products";
 import { getUsersApi } from "../../api/users";
 import { getAllOrders, getOrderDashboardStats } from "../../api/orders";
-import { getBrands } from "../../api/brands";
-import { getShipments } from "../../api/shipments";
+// import { getOrderDashboardStats } from "../../api/orders";
 
+import { getBrands } from "../../api/brands";
+import { getMakes } from "../../api/vehicles";
+import { getShipments } from "../../api/shipments";
+import { getTransactionDashboardStats } from "../../api/transactions";
+const fmt = (n) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(n);
+
+import { Link } from "react-router-dom";
 const statCards = [
   {
     key: "products",
@@ -31,6 +36,22 @@ const statCards = [
     fg: "text-indigo-600",
   },
   {
+    key: "orders",
+    label: "Orders",
+    path: "/orders",
+    icon: ShoppingCart,
+    bg: "bg-amber-100",
+    fg: "text-amber-600",
+  },
+  {
+    key: "ordersToday",
+    label: "Orders Today",
+    path: "/orders",
+    icon: ShoppingCart,
+    bg: "bg-green-100",
+    fg: "text-green-600",
+  },
+  {
     key: "users",
     label: "Users",
     path: "/users",
@@ -39,13 +60,29 @@ const statCards = [
     fg: "text-emerald-600",
   },
   {
-    key: "orders",
-    label: "Orders",
-    path: "/orders",
-    icon: ShoppingCart,
-    bg: "bg-amber-100",
-    fg: "text-amber-600",
+    key: "transactions",
+    label: "Transactions",
+    path: "/transactions",
+    icon: CreditCard,
+    bg: "bg-cyan-100",
+    fg: "text-cyan-600",
   },
+  // {
+  //   key: "pendingTx",
+  //   label: "Pending Tx",
+  //   path: "/transactions?status=pending",
+  //   icon: CreditCard,
+  //   bg: "bg-amber-100",
+  //   fg: "text-amber-600",
+  // },
+  // {
+  //   key: "txToday",
+  //   label: "Tx Today",
+  //   path: "/transactions",
+  //   icon: CreditCard,
+  //   bg: "bg-green-100",
+  //   fg: "text-green-600",
+  // },
   {
     key: "categories",
     label: "Categories",
@@ -72,184 +109,204 @@ const statCards = [
   },
 ];
 
-const orderStatCards = [
-  {
-    key: "new_orders_today",
-    label: "New Orders Today",
-    path: "/orders?date=today",
-    icon: ShoppingBag,
-    bg: "bg-cyan-100",
-    fg: "text-cyan-600",
-  },
-  {
-    key: "pending_orders",
-    label: "Pending Orders",
-    path: "/orders?status=pending",
-    icon: Clock3,
-    bg: "bg-yellow-100",
-    fg: "text-yellow-600",
-  },
-  {
-    key: "shipped_orders",
-    label: "Shipped Orders",
-    path: "/orders?status=shipped",
-    icon: Truck,
-    bg: "bg-blue-100",
-    fg: "text-blue-600",
-  },
-  {
-    key: "delivered_orders",
-    label: "Delivered Orders",
-    path: "/orders?status=delivered",
-    icon: CircleCheckBig,
-    bg: "bg-green-100",
-    fg: "text-green-600",
-  },
-  {
-    key: "orders_pending",
-    label: "Orders Pending",
-    path: "/orders?payment_status=pending",
-    icon: CreditCard,
-    bg: "bg-red-100",
-    fg: "text-red-600",
-  },
+const filterLinks = [
+  { label: "Pending Orders", path: "/orders?status=pending" },
+  { label: "Active Products", path: "/products?status=active" },
+  { label: "Pending Shipments", path: "/shipments?status=pending" },
+  { label: "Shipped Orders", path: "/orders?status=shipped" },
+  { label: "Delivered Orders", path: "/orders?status=delivered" },
+  { label: "In Transit Shipments", path: "/shipments?status=in_transit" },
 ];
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({});
-  const [orderStats, setOrderStats] = useState({});
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       try {
-        setLoading(true);
-
         const [
           products,
-          usersResponse,
-          orders,
+          users,
           categories,
           brands,
-          shipments,
-          orderDashboardStats,
+          makes,
+          orderStats,
+          txStats,
         ] = await Promise.all([
           getAllProductsApi({ limit: 1 }),
-          getUsersApi(),
-          getAllOrders({ limit: 1 }),
+          getUsersApi().then((r) => r.data),
           getCategories({ limit: 1 }),
           getBrands({ limit: 1 }),
           getShipments({ limit: 1 }),
-          getOrderDashboardStats(),
+          getOrderDashboardStats().catch(() => null),
+          getTransactionDashboardStats().catch(() => null),
         ]);
-
-        const users = usersResponse?.data ?? usersResponse;
-
         setStats({
-          products: products?.pagination?.total ?? products?.data?.length ?? 0,
-
-          users:
-            users?.pagination?.total ??
-            users?.data?.length ??
-            users?.length ??
-            0,
-
-          orders:
-            orders?.pagination?.total ??
-            orderDashboardStats?.data?.total_orders ??
-            0,
-
-          categories:
-            categories?.pagination?.total ?? categories?.data?.length ?? 0,
-
-          brands: brands?.pagination?.total ?? brands?.data?.length ?? 0,
-
+          products: products.pagination?.total ?? products.data?.length ?? 0,
+          users: users.pagination?.total ?? users.length ?? 0,
+          orders: orderStats?.data?.total_orders ?? 0,
+          ordersToday: orderStats?.data?.new_orders_today ?? 0,
+          categories: categories.pagination?.total ?? 0,
+          brands: brands.pagination?.total ?? 0,
           shipments:
-            shipments?.pagination?.totalItems ??
-            shipments?.pagination?.total ??
-            shipments?.data?.length ??
-            0,
+            makes.pagination?.totalItems ?? makes.pagination?.total ?? 0,
+          transactions: txStats?.data?.total_transactions ?? 0,
+          pendingTx: txStats?.data?.pending_transactions ?? 0,
+          txToday: txStats?.data?.new_transactions_today ?? 0,
+          txSuccessful: txStats?.data?.successful_transactions ?? 0,
+          txFailed: txStats?.data?.failed_transactions ?? 0,
+          txPayment: txStats?.data?.payment_transactions ?? 0,
+          txRefund: txStats?.data?.refund_transactions ?? 0,
+          txTodayAmount: txStats?.data?.today_successful_amount ?? 0,
+          txTodayNet: txStats?.data?.today_net_amount ?? 0,
+          txTotalAmount: txStats?.data?.total_successful_amount ?? 0,
+          txTotalRefund: txStats?.data?.total_refund_amount ?? 0,
+          txTotalNet: txStats?.data?.total_net_amount ?? 0,
         });
-
-        setOrderStats(orderDashboardStats?.data ?? {});
-      } catch (error) {
-        console.error("Dashboard loading error:", error);
-      } finally {
-        setLoading(false);
+      } catch (e) {
+        console.error(e);
       }
     };
-
     load();
   }, []);
 
   return (
     <div>
-      <h1 className="mb-1 text-2xl font-bold text-slate-900">Dashboard</h1>
-
-      <p className="mb-8 text-sm text-slate-500">
+      <h1 className="text-2xl font-bold text-slate-900 mb-1">Dashboard</h1>
+      <p className="text-slate-500 text-sm mb-8">
         Overview of your 4x4 e-commerce store
       </p>
-      <div className="mb-4 mt-10">
-        <h2 className="text-lg font-bold text-slate-900">Order Overview</h2>
+      <div className="my-8">
+        <h2 className="text-lg font-semibold text-slate-800 mb-3">
+          Quick Filters
+        </h2>
 
-        <p className="text-sm text-slate-500">
-          Current order and payment status
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {orderStatCards.map(({ key, label, path, icon: Icon, bg, fg }) => (
-          <Link
-            to={path}
-            key={key}
-            className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  {label}
+        {stats.txTotalNet > 0 && (
+          <div className="mt-8">
+            <h2 className="text-lg font-semibold text-slate-800 mb-3">
+              Transaction Details
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Successful
                 </p>
-
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {loading ? "—" : (orderStats[key] ?? 0)}
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {stats.txSuccessful}
                 </p>
               </div>
-
-              <div className={`rounded-xl p-3 ${bg}`}>
-                <Icon size={24} className={fg} />
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Pending
+                </p>
+                <p className="text-lg font-bold text-amber-600 mt-1">
+                  {stats.pendingTx}
+                </p>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Failed
+                </p>
+                <p className="text-lg font-bold text-rose-600 mt-1">
+                  {stats.txFailed}
+                </p>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Payments
+                </p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {stats.txPayment}
+                </p>
+              </div>
+              {/* <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Refunds
+                </p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {stats.txRefund}
+                </p>
+              </div> */}
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Today Amount
+                </p>
+                <p className="text-lg font-bold text-green-600 mt-1">
+                  {fmt(stats.txTodayAmount)}
+                </p>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Today Net
+                </p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {fmt(stats.txTodayNet)}
+                </p>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Today Tx
+                </p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {stats.txToday}
+                </p>
+              </div>
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Total Amount
+                </p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {fmt(stats.txTotalAmount)}
+                </p>
+              </div>
+              {/* <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Total Refund
+                </p>
+                <p className="text-lg font-bold text-rose-600 mt-1">
+                  {fmt(stats.txTotalRefund)}
+                </p>
+              </div> */}
+              <div className="bg-white border border-slate-100 rounded-xl p-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wide">
+                  Total Net
+                </p>
+                <p className="text-lg font-bold text-emerald-600 mt-1">
+                  {fmt(stats.txTotalNet)}
+                </p>
               </div>
             </div>
-          </Link>
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Today&apos;s Revenue
-          </p>
-
-          <p className="mt-1 text-3xl font-bold text-slate-900">
-            ₹{Number(orderStats.today_revenue || 0).toLocaleString("en-IN")}
-          </p>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-3">
+          {filterLinks.map(({ label, path }) => (
+            <Link
+              key={label}
+              to={path}
+              className="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm"
+            >
+              {label}
+            </Link>
+          ))}
         </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {statCards.map(({ key, label, path, icon: Icon, bg, fg }) => (
           <Link
             to={path}
             key={key}
-            className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                   {label}
                 </p>
-
-                <p className="mt-1 text-3xl font-bold text-slate-900">
-                  {loading ? "—" : (stats[key] ?? 0)}
+                <p className="text-3xl font-bold text-slate-900 mt-1">
+                  {stats[key] ?? "—"}
                 </p>
               </div>
-
-              <div className={`rounded-xl p-3 ${bg}`}>
+              <div className={`p-3 rounded-xl ${bg}`}>
                 <Icon size={24} className={fg} />
               </div>
             </div>

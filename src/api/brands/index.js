@@ -9,14 +9,19 @@ export const getBrandById = (id) =>
   api.get(`/brands/get_brand_by_id/${id}`).then(unwrap);
 
 export const createBrand = (data) =>
-  api.post("/brands/create_brand", data, {
-    headers: { "Content-Type": "multipart/form-data" },
-  }).then(unwrap);
-
+  api
+    .post("/brands/create_brand", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then(unwrap);
+export const restoreBrand = (id) =>
+  api.get(`/brands/restore/${id}`).then(unwrap);
 export const updateBrand = (id, data) =>
-  api.put(`/brands/update_brand/${id}`, data, {
-    headers: { "Content-Type": "multipart/form-data" },
-  }).then(unwrap);
+  api
+    .put(`/brands/update_brand/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    .then(unwrap);
 
 export const deleteBrand = (id) =>
   api.delete(`/brands/delete_brand/${id}`).then(unwrap);

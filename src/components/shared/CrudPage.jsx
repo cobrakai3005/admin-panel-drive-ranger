@@ -4,6 +4,7 @@ import {
   Loader2,
   Plus,
   RefreshCw,
+  RotateCcw,
   Save,
   Trash2,
   ToggleLeft,
@@ -18,7 +19,13 @@ import MultiSelectField from "./MultiSelect";
 import StatusBadge from "./StatusBadge";
 import { toast } from "sonner";
 import Select from "react-select";
-import { confirmDelete, confirmUpdate, confirmToggle } from "./Confirm";
+import {
+  confirmDelete,
+  confirmDeleteEntity,
+  confirmRestore,
+  confirmUpdate,
+  confirmToggle,
+} from "./Confirm";
 
 // Helper to build FormData from values
 function buildFormData(values, fileFields = []) {
@@ -1382,10 +1389,13 @@ export default function CrudPage({
   updateItem,
   deleteItem,
   toggleStatus,
+  restoreItem,
   canCreate = true,
   canEdit = true,
   canDelete = true,
   createLabel = "Add New",
+  deleteEntityLabel = "Category",
+  deleteChildWarning = "associated records",
   modalWide = false,
   FilterComponent,
   emptyMessage = "No records found.",
@@ -1403,7 +1413,15 @@ export default function CrudPage({
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
   const [form, setForm] = useState(defaultForm);
-  const [filterState, setFilterState] = useState(initialFilterState);
+  const [filterState, setFilterState] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlOverrides = {};
+    for (const [k, v] of params) {
+      urlOverrides[k] = v;
+    }
+    return { ...initialFilterState, ...urlOverrides };
+  });
+  const [showDeleted, setShowDeleted] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [limit, setLimit] = useState(10);
   const firstFilterRender = useRef(true);
@@ -1412,7 +1430,9 @@ export default function CrudPage({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetchList(page, filterState);
+      const params = { ...filterState };
+      if (showDeleted) params.status = "deleted";
+      const res = await fetchList(page, params);
 
       setRows(res?.data || []);
       setTotalPages(res?.pagination?.totalPages || 1);
@@ -1425,7 +1445,7 @@ export default function CrudPage({
     } finally {
       setLoading(false);
     }
-  }, [fetchList, page, filterState]);
+  }, [fetchList, page, filterState, showDeleted]);
 
   useEffect(() => {
     load();
@@ -1496,11 +1516,15 @@ export default function CrudPage({
           ? preparePayload(form, editingRow)
           : { ...form };
 
-        // Handle date fields
-        if (payload.valid_from && payload.valid_to) {
-          payload.valid_from = new Date(payload.valid_from).toISOString();
-          payload.valid_to = new Date(payload.valid_to).toISOString();
-        }
+        // Ensure date fields are in YYYY-MM-DD format
+        ["valid_from", "valid_to"].forEach((key) => {
+          if (payload[key] && !/^\d{4}-\d{2}-\d{2}$/.test(payload[key])) {
+            const d = new Date(payload[key]);
+            if (!isNaN(d)) {
+              payload[key] = d.toLocaleDateString("en-CA");
+            }
+          }
+        });
 
         // Convert to FormData if file fields exist
         if (fileFields.length > 0) {
@@ -1555,12 +1579,17 @@ export default function CrudPage({
 
   const handleDelete = useCallback(
     async (row) => {
-      const ok = await confirmDelete({
-        title: `Delete ${title}`,
-        content: "This action cannot be undone. Are you sure?",
-        okText: "Delete",
-        okType: "danger",
-      });
+      const ok = deleteEntityLabel
+        ? await confirmDeleteEntity({
+            entity: deleteEntityLabel,
+            childWarning: deleteChildWarning,
+          })
+        : await confirmDelete({
+            title: `Delete ${title}`,
+            content: "This action cannot be undone. Are you sure?",
+            okText: "Delete",
+            okType: "danger",
+          });
 
       if (!ok) return;
 
@@ -1573,7 +1602,30 @@ export default function CrudPage({
         toast.error(err?.response?.data?.message || "Delete failed");
       }
     },
-    [deleteItem, idKey, title, load],
+    [deleteItem, idKey, title, load, deleteEntityLabel, deleteChildWarning],
+  );
+
+  const handleRestore = useCallback(
+    async (row) => {
+      const ok = await confirmRestore({
+        title: "Restore Item",
+        content: "Are you sure you want to restore this item?",
+        okText: "Restore",
+        okType: "primary",
+      });
+
+      if (!ok) return;
+
+      try {
+        await restoreItem(row[idKey]);
+        load();
+        toast.success("Item restored successfully");
+      } catch (err) {
+        console.error("Restore failed:", err);
+        toast.error(err?.response?.data?.message || "Restore failed");
+      }
+    },
+    [restoreItem, idKey, load],
   );
 
   const handleToggle = useCallback(
@@ -1602,8 +1654,12 @@ export default function CrudPage({
       <PageHeader
         title={title}
         description={description}
-        actionLabel={canCreate && createItem ? createLabel : undefined}
-        onAction={canCreate && createItem ? openCreate : undefined}
+        actionLabel={
+          canCreate && createItem && !showDeleted ? createLabel : undefined
+        }
+        onAction={
+          canCreate && createItem && !showDeleted ? openCreate : undefined
+        }
         extra={
           <div className="flex items-center gap-2">
             {/* FIX: FilterComponent is now a controlled component */}
@@ -1612,6 +1668,22 @@ export default function CrudPage({
                 filterState={filterState}
                 setFilterState={handleFilterChange}
               />
+            )}
+            {restoreItem && (
+              <button
+                type="button"
+                onClick={() => setShowDeleted((v) => !v)}
+                className={`p-2.5 rounded-xl border transition-colors ${
+                  showDeleted
+                    ? "bg-amber-50 border-amber-300 text-amber-600"
+                    : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                }`}
+                title={
+                  showDeleted ? "Showing deleted items" : "Show deleted items"
+                }
+              >
+                <Trash2 size={16} />
+              </button>
             )}
             <button
               type="button"
@@ -1638,9 +1710,9 @@ export default function CrudPage({
                     {col.label}
                   </th>
                 ))}
-                {(canEdit || canDelete || toggleStatus) && (
+                {(canEdit || canDelete || toggleStatus || showDeleted) && (
                   <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500 text-right">
-                    Actions
+                    {showDeleted ? "Restore" : "Actions"}
                   </th>
                 )}
               </tr>
@@ -1691,40 +1763,53 @@ export default function CrudPage({
                         )}
                       </td>
                     ))}
-                    {(canEdit || canDelete || toggleStatus) && (
+                    {(canEdit || canDelete || toggleStatus || showDeleted) && (
                       <td className="px-4 py-3 text-right">
                         <div className="inline-flex gap-1">
-                          {toggleStatus && (
+                          {showDeleted && restoreItem ? (
                             <button
                               type="button"
-                              onClick={() => handleToggle(row)}
-                              className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
-                              title="Toggle status"
+                              onClick={() => handleRestore(row)}
+                              className="p-2 rounded-lg border border-amber-200 hover:border-amber-400 hover:text-amber-600 text-amber-500 transition-colors"
+                              title="Restore item"
                             >
-                              {row.status === "active" ? (
-                                <ToggleRight size={16} />
-                              ) : (
-                                <ToggleLeft size={16} />
+                              <RotateCcw size={16} />
+                            </button>
+                          ) : (
+                            <>
+                              {toggleStatus && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggle(row)}
+                                  className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
+                                  title="Toggle status"
+                                >
+                                  {row.status === "active" ? (
+                                    <ToggleRight size={16} />
+                                  ) : (
+                                    <ToggleLeft size={16} />
+                                  )}
+                                </button>
                               )}
-                            </button>
-                          )}
-                          {canEdit && (updateItem || onEditRow) && (
-                            <button
-                              type="button"
-                              onClick={() => openEdit(row)}
-                              className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
-                            >
-                              <Edit3 size={16} />
-                            </button>
-                          )}
-                          {canDelete && deleteItem && (
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(row)}
-                              className="p-2 rounded-lg border border-slate-200 hover:border-rose-200 hover:text-rose-600 transition-colors"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                              {canEdit && (updateItem || onEditRow) && (
+                                <button
+                                  type="button"
+                                  onClick={() => openEdit(row)}
+                                  className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
+                                >
+                                  <Edit3 size={16} />
+                                </button>
+                              )}
+                              {canDelete && deleteItem && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(row)}
+                                  className="p-2 rounded-lg border border-slate-200 hover:border-rose-200 hover:text-rose-600 transition-colors"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </td>
@@ -1794,7 +1879,7 @@ export default function CrudPage({
   );
 }
 
-
+// Image cell with click-to-expand modal for table thumbnails
 function ImageCell({ src, alt, className = "" }) {
   const [open, setOpen] = useState(false);
   if (!src) return null;
@@ -1821,4 +1906,3 @@ function ImageCell({ src, alt, className = "" }) {
 }
 
 export { buildFormData, ImageCell };
-

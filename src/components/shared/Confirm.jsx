@@ -57,3 +57,40 @@ export function confirmToggle({
     });
   });
 }
+
+export function confirmRestore({
+  title = "Restore this item?",
+  content = "This will restore the deleted item.",
+  okText = "Restore",
+  cancelText = "Cancel",
+  okType = "primary",
+}) {
+  return new Promise((resolve) => {
+    Modal.confirm({
+      title,
+      content,
+      okText,
+      cancelText,
+      okType,
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+}
+
+export function confirmDeleteEntity({
+  entity = "item",
+  childWarning = "associated records",
+}) {
+  return new Promise((resolve) => {
+    Modal.confirm({
+      title: `Delete ${entity}`,
+      content: `Deleting this ${entity.toLowerCase()} will affect ${childWarning}. This action cannot be undone. Are you sure?`,
+      okText: "Delete",
+      cancelText: "Cancel",
+      okType: "danger",
+      onOk: () => resolve(true),
+      onCancel: () => resolve(false),
+    });
+  });
+}

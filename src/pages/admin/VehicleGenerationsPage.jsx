@@ -5,6 +5,7 @@ import {
   createGeneration,
   updateGeneration,
   deleteGeneration,
+  restoreGeneration,
 } from "../../api/vehicles";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -87,6 +88,9 @@ export default function VehicleGenerationsPage() {
       createItem={createGeneration}
       updateItem={updateGeneration}
       deleteItem={deleteGeneration}
+      deleteEntityLabel="Vehicle Generation"
+      deleteChildWarning="vehicle compatibility records"
+      restoreItem={restoreGeneration}
       FilterComponent={GenerationFilters}
       columns={[
         { key: "no", label: "Serial" },

@@ -15,25 +15,9 @@ const ORDER_STATUSES = [
 ];
 
 function OrderFilter({ filterState, setFilterState }) {
-  // const [searchInput, setSearchInput] = useState(filterState.search || "");
-
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setFilterState({ ...filterState, search: searchInput });
-  //   }, 400); // 400ms debounce
-
-  //   return () => clearTimeout(timer);
-  // }, [searchInput]);
   const statusOptions = ORDER_STATUSES;
   return (
-    <div className="flex items-center gap-3">
-      {/* <input
-        type="text"
-        placeholder="Search products..."
-        value={searchInput}
-        onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-      /> */}
+    <div className="flex items-center gap-3 flex-wrap">
       <Select
         options={statusOptions}
         value={statusOptions.find(
@@ -48,6 +32,24 @@ function OrderFilter({ filterState, setFilterState }) {
         isSearchable={false}
         className="min-w-[180px] text-sm"
         classNamePrefix="react-select"
+      />
+      <input
+        type="date"
+        value={filterState.from_date || ""}
+        onChange={(e) =>
+          setFilterState((prev) => ({ ...prev, from_date: e.target.value }))
+        }
+        className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        title="From date"
+      />
+      <input
+        type="date"
+        value={filterState.to_date || ""}
+        onChange={(e) =>
+          setFilterState((prev) => ({ ...prev, to_date: e.target.value }))
+        }
+        className="px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        title="To date"
       />
     </div>
   );
@@ -71,13 +73,14 @@ export default function OrdersPage() {
         canCreate={false}
         canDelete={false}
         FilterComponent={OrderFilter}
-       
         fetchList={(page, filters) =>
           getAllOrders({
             page,
             limit: 10,
-            status: filters.status || "active",
+            status: filters.status || "",
             search: filters.search || "",
+            from_date: filters.from_date || "",
+            to_date: filters.to_date || "",
           })
         }
         onEditRow={(row) => {
@@ -323,7 +326,8 @@ export default function OrdersPage() {
                           Discount:
                         </td>
                         <td className="px-4 py-2 text-right text-sm text-green-600">
-                          -Rs- {parseFloat(detailModal.discount_amount).toFixed(2)}
+                          -Rs-{" "}
+                          {parseFloat(detailModal.discount_amount).toFixed(2)}
                         </td>
                       </tr>
                     )}
@@ -496,7 +500,7 @@ export default function OrdersPage() {
           >
             Update Status
           </button>
-        </form>
+        </form> 
       </Modal>
     </>
   );
