@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Link2,
   Package,
+  MessageSquare,
   Settings,
   Shield,
   ShipIcon,
@@ -66,6 +67,8 @@ export const navGroups = [
     label: "Support",
     items: [
       { path: "/reviews", icon: Star, label: "Reviews" },
+      { path: "/messages", icon: MessageSquare, label: "Messages" },
+
       // { path: "/warranty", icon: Shield, label: "Warranty" },
     ],
   },

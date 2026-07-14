@@ -10,6 +10,8 @@ import AppLayout from "./pages/AppLayout";
 import ProtectedRoute from "./pages/ProtectedRoute";
 
 // Lazy loaded pages
+const MessagesPage = lazy(() => import("./pages/admin/MessagesPage"));
+
 const DashboardPage = lazy(() => import("./pages/admin/DashboardPage"));
 const CategoriesPage = lazy(() => import("./pages/admin/CategoriesPage"));
 const SubCategoriesPage = lazy(() => import("./pages/admin/SubCategoriesPage"));
@@ -107,6 +109,14 @@ const router = createBrowserRouter(
           }
         />
 
+        <Route
+          path="messages"
+          element={
+            <Suspense fallback={<Loader />}>
+              <MessagesPage />
+            </Suspense>
+          }
+        />
         <Route
           path="product-items"
           element={
