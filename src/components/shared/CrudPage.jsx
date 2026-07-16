@@ -671,7 +671,7 @@ function CreatableSelectField({ field, value, form, onChange }) {
             onClick={() => setCreating(!creating)}
             className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
           >
-            <Plus size={12} />
+            <Plus size={18} />
           </button>
         )}
       </div>
@@ -1041,7 +1041,7 @@ function VehicleSelectorField({
                 onClick={() => toggleCreate("make")}
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
-                <Plus size={12} />
+                <Plus size={18} />
               </button>
             )}
           </div>
@@ -1126,7 +1126,7 @@ function VehicleSelectorField({
                 onClick={() => toggleCreate("model")}
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
-                <Plus size={12} />
+                <Plus size={18} />
               </button>
             )}
           </div>
@@ -1216,7 +1216,7 @@ function VehicleSelectorField({
                 onClick={() => toggleCreate("generation")}
                 className="p-0.5 rounded hover:bg-slate-200 text-slate-400 hover:text-slate-600"
               >
-                <Plus size={12} />
+                <Plus size={18} />
               </button>
             )}
           </div>
@@ -1632,7 +1632,7 @@ export default function CrudPage({
     async (row) => {
       try {
         const ok = await confirmToggle({
-          title: "Toggle Status",
+          title: "Change Status",
           content: "Are you sure you want to toggle the status?",
           okText: "Toggle",
         });
@@ -1673,7 +1673,7 @@ export default function CrudPage({
               <button
                 type="button"
                 onClick={() => setShowDeleted((v) => !v)}
-                className={`p-2.5 rounded-xl border transition-colors ${
+                className={`p-2.5 flex items-center gap-3 rounded-xl border transition-colors ${
                   showDeleted
                     ? "bg-amber-50 border-amber-300 text-amber-600"
                     : "border-slate-200 hover:bg-slate-50 text-slate-600"
@@ -1682,7 +1682,7 @@ export default function CrudPage({
                   showDeleted ? "Showing deleted items" : "Show deleted items"
                 }
               >
-                <Trash2 size={16} />
+                <span className="text-sm">Deleted Products</span> <Trash2 size={20} />
               </button>
             )}
             <button

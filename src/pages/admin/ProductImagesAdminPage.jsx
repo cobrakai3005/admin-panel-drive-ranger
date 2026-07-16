@@ -140,7 +140,7 @@ export default function ProductImagesAdminPage() {
       loadImages();
     } catch (err) {
       showToast(
-        err?.response?.data?.message || "Failed to toggle status",
+        err?.response?.data?.message || "Failed to Change status",
         "error",
       );
     }

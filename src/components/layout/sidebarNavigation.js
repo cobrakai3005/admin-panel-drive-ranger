@@ -6,6 +6,7 @@ import {
   GitBranch,
   Image,
   Layers,
+  Truck,
   LayoutDashboard,
   Link2,
   Package,
@@ -24,6 +25,7 @@ export const standaloneNavItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { path: "/products", icon: Package, label: "Products" },
   { path: "/orders", icon: ShoppingCart, label: "Orders" },
+  { path: "/shipments", icon: ShipIcon, label: "Shipments" },
 ];
 
 export const navGroups = [
@@ -56,7 +58,7 @@ export const navGroups = [
       // { path: "/orders", icon: ShoppingCart, label: "Orders" },
       { path: "/transactions", icon: CreditCard, label: "Transactions" },
       { path: "/coupons", icon: Ticket, label: "Coupons" },
-      { path: "/shipments", icon: ShipIcon, label: "Shipments" },
+      { path: "/shipping-costs", icon: Truck, label: "Shipping Costs" },
     ],
   },
   {

@@ -39,7 +39,7 @@ export function confirmUpdate({
   });
 }
 export function confirmToggle({
-  title = "Are you sure you want to Toggle this?",
+  title = "Are you sure you want to change status this?",
   content = "",
   okText = "Yes",
   cancelText = "Cancel",

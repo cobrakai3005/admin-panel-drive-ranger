@@ -235,14 +235,14 @@ export default function DashboardPage() {
                   {fmt(stats.txTodayAmount)}
                 </p>
               </div>
-              <div className="bg-white border border-slate-100 rounded-xl p-4">
+              {/* <div className="bg-white border border-slate-100 rounded-xl p-4">
                 <p className="text-xs text-slate-500 uppercase tracking-wide">
                   Today Net
                 </p>
                 <p className="text-lg font-bold text-slate-900 mt-1">
                   {fmt(stats.txTodayNet)}
                 </p>
-              </div>
+              </div> */}
               <div className="bg-white border border-slate-100 rounded-xl p-4">
                 <p className="text-xs text-slate-500 uppercase tracking-wide">
                   Today Tx
@@ -267,14 +267,14 @@ export default function DashboardPage() {
                   {fmt(stats.txTotalRefund)}
                 </p>
               </div> */}
-              <div className="bg-white border border-slate-100 rounded-xl p-4">
+              {/* <div className="bg-white border border-slate-100 rounded-xl p-4">
                 <p className="text-xs text-slate-500 uppercase tracking-wide">
                   Total Net
                 </p>
                 <p className="text-lg font-bold text-emerald-600 mt-1">
                   {fmt(stats.txTotalNet)}
                 </p>
-              </div>
+              </div> */}
             </div>
           </div>
         )}

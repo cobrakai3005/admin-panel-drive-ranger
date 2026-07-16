@@ -11,6 +11,7 @@ import ProtectedRoute from "./pages/ProtectedRoute";
 
 // Lazy loaded pages
 const MessagesPage = lazy(() => import("./pages/admin/MessagesPage"));
+const ShippingCostsPage = lazy(() => import("./pages/admin/ShippingCostsPage"));
 
 const DashboardPage = lazy(() => import("./pages/admin/DashboardPage"));
 const CategoriesPage = lazy(() => import("./pages/admin/CategoriesPage"));
@@ -117,6 +118,16 @@ const router = createBrowserRouter(
             </Suspense>
           }
         />
+
+        <Route
+          path="shipping-costs"
+          element={
+            <Suspense fallback={<Loader />}>
+              <ShippingCostsPage />
+            </Suspense>
+          }
+        />
+
         <Route
           path="product-items"
           element={

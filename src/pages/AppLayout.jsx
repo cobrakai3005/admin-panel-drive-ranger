@@ -94,13 +94,13 @@ export default function AppLayout() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button
+              {/* <button
                 type="button"
                 className="relative p-2 rounded-lg hover:bg-slate-100"
               >
                 <Bell size={18} className="text-slate-600" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
-              </button>
+              </button> */}
 
               <div className="relative">
                 <button
