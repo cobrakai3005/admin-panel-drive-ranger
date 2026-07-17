@@ -35,7 +35,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             <>
               <Store className="text-primary-light shrink-0" size={22} />
               <span className="text-lg font-bold bg-gradient-to-r from-slate-50 to-slate-500 bg-clip-text text-transparent truncate">
-                4x4 Admin
+                Drive Ranger
               </span>
             </>
           )}

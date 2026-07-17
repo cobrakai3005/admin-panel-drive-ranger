@@ -25,7 +25,7 @@ export const standaloneNavItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { path: "/products", icon: Package, label: "Products" },
   { path: "/orders", icon: ShoppingCart, label: "Orders" },
-  { path: "/shipments", icon: ShipIcon, label: "Shipments" },
+  // { path: "/shipments", icon: ShipIcon, label: "Shipments" },
 ];
 
 export const navGroups = [

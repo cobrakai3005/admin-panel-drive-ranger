@@ -1477,7 +1477,7 @@ export default function CrudPage({
     setForm(initial);
     setModalOpen(true);
   }, [defaultForm, getDefaultForm]);
-
+  // Add this in cpanel
   const openEdit = useCallback(
     (row) => {
       if (onEditRow) {
@@ -1486,20 +1486,31 @@ export default function CrudPage({
       }
 
       setEditingRow(row);
+
       const next = { ...defaultForm };
+
       formFields.forEach((f) => {
         if (row[f.name] !== undefined && row[f.name] !== null) {
-          next[f.name] = row[f.name];
+          if (f.type === "checkbox") {
+            next[f.name] =
+              row[f.name] === true || row[f.name] === 1 || row[f.name] === "1";
+          } else {
+            next[f.name] = row[f.name];
+          }
         }
-        // Populate nested checkbox values from checkbox-group fields
+
         if (f.type === "checkbox-group" && f.checkboxes) {
           f.checkboxes.forEach((cb) => {
             if (row[cb.name] !== undefined && row[cb.name] !== null) {
-              next[cb.name] = row[cb.name];
+              next[cb.name] =
+                row[cb.name] === true ||
+                row[cb.name] === 1 ||
+                row[cb.name] === "1";
             }
           });
         }
       });
+
       setForm(next);
       setModalOpen(true);
     },
@@ -1682,7 +1693,8 @@ export default function CrudPage({
                   showDeleted ? "Showing deleted items" : "Show deleted items"
                 }
               >
-                <span className="text-sm">Deleted Products</span> <Trash2 size={20} />
+                <span className="text-sm">Deleted Products</span>{" "}
+                <Trash2 size={20} />
               </button>
             )}
             <button

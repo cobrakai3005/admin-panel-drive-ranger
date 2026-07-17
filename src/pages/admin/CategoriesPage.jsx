@@ -95,12 +95,7 @@ export default function CategoriesPage() {
       deleteChildWarning="associated products"
       toggleStatus={toggleCategoryStatus}
       restoreItem={restoreCategory}
-      // filters={(filterState, setFilterState) => (
-      //   <CategoryFilters
-      //     filterState={filterState}
-      //     setFilterState={setFilterState}
-      //   />
-      // )}
+    
       FilterComponent={CategoryFilters}
       columns={[
         { key: "no", label: "Serial" },

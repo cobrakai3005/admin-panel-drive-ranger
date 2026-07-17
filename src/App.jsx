@@ -38,7 +38,7 @@ const VehicleCompatibilityPage = lazy(
 const ProductImagesAdminPage = lazy(
   () => import("./pages/admin/ProductImagesAdminPage"),
 );
-const ShipmentAdmin = lazy(() => import("./pages/admin/ShipmentAdminPage"));
+// const ShipmentAdmin = lazy(() => import("./pages/admin/ShipmentAdminPage"));
 const AccountsPage = lazy(() => import("./pages/admin/AccountsPage"));
 const WebsiteReviews = lazy(() => import("./pages/admin/WebisteReviews"));
 const SettingsPage = lazy(() => import("./pages/admin/SettingsPage"));
@@ -191,14 +191,14 @@ const router = createBrowserRouter(
           }
         /> */}
 
-        <Route
+        {/* <Route
           path="shipments"
           element={
             <Suspense fallback={<Loader />}>
               <ShipmentAdmin />
             </Suspense>
           }
-        />
+        /> */}
 
         <Route
           path="reviews"

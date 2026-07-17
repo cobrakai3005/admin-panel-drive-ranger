@@ -36,16 +36,17 @@ export default function Auth() {
       toast.error(error?.response?.data?.message || "Login failed");
     }
   };
-
+  // #A0070C
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/30 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#A0070C] shadow-lg shadow-[#A0070C]/30 mb-4">
             <FaStore className="text-3xl text-white" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-[#A0070C] to-red-500 bg-clip-text text-transparent">
             AdminHub
           </h1>
         </div>
@@ -124,7 +125,7 @@ export default function Auth() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-70 shadow-lg shadow-blue-500/25"
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-[#A0070C] to-[#C00910] text-white font-medium rounded-lg hover:from-[#87060A] hover:to-[#A0070C] focus:outline-none focus:ring-2 focus:ring-[#A0070C] focus:ring-offset-2 transition-all duration-200 disabled:opacity-70 shadow-lg shadow-[#A0070C]/30"
               >
                 {loading ? "Logging in..." : "Login"}
               </button>

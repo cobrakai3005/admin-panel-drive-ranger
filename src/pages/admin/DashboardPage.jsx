@@ -99,14 +99,14 @@ const statCards = [
     bg: "bg-rose-100",
     fg: "text-rose-600",
   },
-  {
-    key: "shipments",
-    label: "Shipments",
-    path: "/shipments",
-    icon: Car,
-    bg: "bg-blue-100",
-    fg: "text-blue-600",
-  },
+  // {
+  //   key: "shipments",
+  //   label: "Shipments",
+  //   path: "/shipments",
+  //   icon: Car,
+  //   bg: "bg-blue-100",
+  //   fg: "text-blue-600",
+  // },
 ];
 
 const filterLinks = [
@@ -115,7 +115,7 @@ const filterLinks = [
   { label: "Pending Shipments", path: "/shipments?status=pending" },
   { label: "Shipped Orders", path: "/orders?status=shipped" },
   { label: "Delivered Orders", path: "/orders?status=delivered" },
-  { label: "In Transit Shipments", path: "/shipments?status=in_transit" },
+  // { label: "In Transit Shipments", path: "/shipments?status=in_transit" },
 ];
 
 export default function DashboardPage() {
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           getUsersApi().then((r) => r.data),
           getCategories({ limit: 1 }),
           getBrands({ limit: 1 }),
-          getShipments({ limit: 1 }),
+          getMakes({ limit: 1 }),
           getOrderDashboardStats().catch(() => null),
           getTransactionDashboardStats().catch(() => null),
         ]);
@@ -148,8 +148,8 @@ export default function DashboardPage() {
           ordersToday: orderStats?.data?.new_orders_today ?? 0,
           categories: categories.pagination?.total ?? 0,
           brands: brands.pagination?.total ?? 0,
-          shipments:
-            makes.pagination?.totalItems ?? makes.pagination?.total ?? 0,
+          // shipments:
+          //   makes.pagination?.totalItems ?? makes.pagination?.total ?? 0,
           transactions: txStats?.data?.total_transactions ?? 0,
           pendingTx: txStats?.data?.pending_transactions ?? 0,
           txToday: txStats?.data?.new_transactions_today ?? 0,
@@ -177,10 +177,6 @@ export default function DashboardPage() {
         Overview of your 4x4 e-commerce store
       </p>
       <div className="my-8">
-        <h2 className="text-lg font-semibold text-slate-800 mb-3">
-          Quick Filters
-        </h2>
-
         {stats.txTotalNet > 0 && (
           <div className="mt-8">
             <h2 className="text-lg font-semibold text-slate-800 mb-3">
@@ -278,6 +274,9 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+        <h2 className="text-lg mt-3 font-semibold text-slate-800 mb-3">
+          Quick Filters
+        </h2>
         <div className="flex flex-wrap gap-3">
           {filterLinks.map(({ label, path }) => (
             <Link
