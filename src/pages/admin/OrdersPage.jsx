@@ -578,7 +578,7 @@
 //     </>
 //   );
 // }
-
+import { User2, PhoneCall } from "lucide-react";
 import { useEffect, useState } from "react";
 import CrudPage from "../../components/shared/CrudPage";
 import Modal from "../../components/shared/Modal";
@@ -607,7 +607,7 @@ const ORDER_STATUSES = [
 function OrderFilter({ filterState, setFilterState }) {
   const statusOptions = ORDER_STATUSES;
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       <Select
         options={statusOptions}
         value={statusOptions.find(
@@ -620,7 +620,7 @@ function OrderFilter({ filterState, setFilterState }) {
           }))
         }
         isSearchable={false}
-        className="min-w-[180px] text-sm"
+        className=" text-sm"
         classNamePrefix="react-select"
       />
       <input
@@ -819,16 +819,32 @@ export default function OrdersPage() {
         }}
         columns={[
           { key: "no", label: "Order Sr" },
-          { key: "customer_name", label: "Customer" },
+
           {
-            key: "phone",
-            label: "Customer Phone",
-            render: (r) => ` ${r.billing_phone}`,
+            key: "customer_name",
+            label: "Customer Name & Mob No",
+            render: (r) => (
+              <div>
+                <p className="flex items-center gap-2">
+                  <User2 className="text-amber-400" size={15} />
+                  {r.customer_name}
+                </p>
+                <p className="flex items-center gap-2">
+                  <PhoneCall className="text-green-500" size={15} />
+                  {r.billing_phone}
+                </p>
+              </div>
+            ),
           },
           {
             key: "shipping_address",
             label: "Full Shipping Address",
-            render: (r) => `${r.shipping_address.full_address}`,
+            render: (r) =>(
+
+                <p className="flex w-48 items-center gap-2">
+                  {r.shipping_address.full_address}
+                </p>
+              )
           },
           {
             key: "order_date",

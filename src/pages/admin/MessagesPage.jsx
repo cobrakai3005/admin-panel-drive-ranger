@@ -32,13 +32,13 @@ function MessageFilter({ filterState, setFilterState }) {
   }, [searchInput]);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1   gap-3">
       <input
         type="text"
         placeholder="Search by name, email, phone, car model..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
     </div>
   );
@@ -141,7 +141,10 @@ export default function MessagesPage() {
 
       <Modal
         open={viewModalOpen}
-        onClose={() => { setViewModalOpen(false); setViewData(null); }}
+        onClose={() => {
+          setViewModalOpen(false);
+          setViewData(null);
+        }}
         title="Message Details"
         wide
       >
@@ -153,37 +156,65 @@ export default function MessagesPage() {
           <div className="p-4 md:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Name</p>
-                <p className="font-medium text-slate-900">{viewData.full_name}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Name
+                </p>
+                <p className="font-medium text-slate-900">
+                  {viewData.full_name}
+                </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Email</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Email
+                </p>
                 <p className="font-medium text-slate-900">{viewData.email}</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Phone</p>
-                <p className="font-medium text-slate-900">{viewData.phone || "—"}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Phone
+                </p>
+                <p className="font-medium text-slate-900">
+                  {viewData.phone || "—"}
+                </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Car Model</p>
-                <p className="font-medium text-slate-900">{viewData.car_model || "—"}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Car Model
+                </p>
+                <p className="font-medium text-slate-900">
+                  {viewData.car_model || "—"}
+                </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Car Year</p>
-                <p className="font-medium text-slate-900">{viewData.car_year || "—"}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Car Year
+                </p>
+                <p className="font-medium text-slate-900">
+                  {viewData.car_year || "—"}
+                </p>
               </div>
               <div className="bg-slate-50 rounded-xl p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Submitted</p>
-                <p className="font-medium text-slate-900">{new Date(viewData.created_at).toLocaleString()}</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">
+                  Submitted
+                </p>
+                <p className="font-medium text-slate-900">
+                  {new Date(viewData.created_at).toLocaleString()}
+                </p>
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-2">Message</h4>
-              <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-4 whitespace-pre-wrap">{viewData.message}</p>
+              <h4 className="text-sm font-semibold text-slate-700 mb-2">
+                Message
+              </h4>
+              <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-4 whitespace-pre-wrap">
+                {viewData.message}
+              </p>
             </div>
           </div>
         ) : (
-          <div className="p-8 text-center text-slate-400">Failed to load message details.</div>
+          <div className="p-8 text-center text-slate-400">
+            Failed to load message details.
+          </div>
         )}
       </Modal>
     </>

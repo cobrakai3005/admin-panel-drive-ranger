@@ -5,6 +5,7 @@ import {
   updateMake,
   deleteMake,
   restoreMake,
+  toggleMakes,
 } from "../../api/vehicles";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -24,23 +25,24 @@ function MakeFilters({ filterState, setFilterState }) {
   }, [searchInput, setFilterState]);
 
   const statusOptions = [
+    { value: "all", label: "All" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ];
 
   return (
-    <div className="flex gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       <input
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="border border-zinc-400/30 outline-none rounded-2xl focus:ring-2 focus:ring-indigo-700 px-4"
+        className="w-full border border-zinc-400/30 outline-none rounded-md focus:ring-2 focus:ring-indigo-700 px-4 py-2"
         placeholder="Search"
       />
 
       <Select
         options={statusOptions}
         value={statusOptions.find(
-          (o) => o.value === (filterState.status || "active"),
+          (o) => o.value === (filterState.status || "all"),
         )}
         onChange={(selected) =>
           setFilterState((prev) => ({
@@ -65,13 +67,14 @@ export default function VehicleMakesPage() {
         getMakes({
           page,
           limit: 10,
-          status: filters.status || "active",
+          status: filters.status || "all",
           search: filters.search || "",
         })
       }
       createItem={createMake}
       updateItem={updateMake}
       deleteItem={deleteMake}
+      toggleStatus={toggleMakes}
       deleteEntityLabel="Vehicle Make"
       deleteChildWarning="associated models and generations"
       restoreItem={restoreMake}
@@ -81,7 +84,7 @@ export default function VehicleMakesPage() {
           key: "name",
           label: "Make",
           render: (row) => (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center sm:flex-row flex-col sm:justify-start justify-end gap-3">
               <ImageCell src={row.logo_url} className="object-contain" />
               <span className="font-medium">{row.name}</span>
             </div>

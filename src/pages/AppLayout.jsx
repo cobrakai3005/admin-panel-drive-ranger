@@ -76,7 +76,7 @@ export default function AppLayout() {
         }}
       />
       <main
-        className={`flex-1 transition-all duration-300 ${sidebarOpen ? "md:ml-72 ml-44" : "ml-[100px]"}`}
+        className={`flex-1 w-full transition-all duration-300 ${sidebarOpen ? "md:ml-72 ml-44" : "ml-[50px]"}`}
       >
         <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 md:px-6 py-3">
           <div className="flex items-center justify-between">

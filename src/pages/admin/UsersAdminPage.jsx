@@ -30,13 +30,13 @@ function UsersFilters({ filterState, setFilterState }) {
   }, [searchInput]);
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-3">
       <input
         type="text"
         placeholder="Search by name, email, phone..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
       <select
         value={filterState.role || ""}
@@ -57,6 +57,7 @@ function UsersFilters({ filterState, setFilterState }) {
         }
         className="px-3 py-2 rounded-xl border border-slate-200 text-sm"
       >
+        <option value="all">All</option>
         <option value="active">Active</option>
         <option value="inactive">Inactive</option>
       </select>
@@ -103,7 +104,6 @@ export default function UsersPage() {
         idKey="id"
         fileFields={["profile_image"]}
         defaultForm={defaultForm}
-     
         FilterComponent={UsersFilters}
         fetchList={(page, filters) =>
           getUsersApi({
@@ -111,7 +111,7 @@ export default function UsersPage() {
             limit: 10,
             search: filters.search || "",
             role: filters.role || undefined,
-            status: filters.status || "active", // send "active" or "inactive"
+            status: filters.status || "all", // send "active" or "inactive"
           })
         }
         // createItem={createUserApi}

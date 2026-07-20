@@ -35,13 +35,13 @@ function CouponFilter({ filterState, setFilterState }) {
   }, [searchInput]);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2  gap-3">
       <input
         type="text"
-        placeholder="Search by order ID or ref..."
+        placeholder="Search by Coupone Code or ref..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
       <select
         value={filterState.status || ""}
@@ -50,7 +50,9 @@ function CouponFilter({ filterState, setFilterState }) {
         }
         className="px-3 py-2 rounded-xl border border-slate-200 text-sm"
       >
+        <option value="all">All</option>
         <option value="active">Active</option>
+        <option value="expired">Expired</option>
         <option value="inactive">Inactive</option>
       </select>
     </div>
@@ -106,11 +108,12 @@ export default function CouponsPage() {
             page,
             limit: 10,
             search: filters.search,
-            status: filters.status || "active",
+            status: filters.status || "all",
           })
         }
         createItem={createCoupon}
         updateItem={updateCoupon}
+      
         FilterComponent={CouponFilter}
         deleteItem={deleteCoupon}
         columns={[
@@ -151,7 +154,7 @@ export default function CouponsPage() {
           },
           {
             key: "view",
-            label: "",
+            label: "View",
             render: (row) => (
               <button
                 type="button"

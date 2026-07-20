@@ -58,7 +58,7 @@ export const navGroups = [
       // { path: "/orders", icon: ShoppingCart, label: "Orders" },
       { path: "/transactions", icon: CreditCard, label: "Transactions" },
       { path: "/coupons", icon: Ticket, label: "Coupons" },
-      { path: "/shipping-costs", icon: Truck, label: "Shipping Costs" },
+      // { path: "/shipping-costs", icon: Truck, label: "Shipping Costs" },
     ],
   },
   {

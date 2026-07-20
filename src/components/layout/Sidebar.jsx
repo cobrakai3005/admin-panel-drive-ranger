@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import {  Menu, Store, X } from "lucide-react";
+import { Menu, Store, X } from "lucide-react";
 import SidebarSearch from "./SidebarSearch";
 import { navGroups, standaloneNavItems } from "./sidebarNavigation";
 
@@ -49,7 +49,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         </button>
       </div>
 
-      <nav className="custom-scrollbar flex-1 px-2 py-3 overflow-y-auto max-h-[calc(100vh-100px)]">
+      <nav className="custom-scrollbar flex-1 px-2 py-3 overflow-x-hidden overflow-y-auto max-h-[calc(100vh-100px)]">
         {sidebarOpen && (
           <SidebarSearch
             value={sidebarSearch}
@@ -66,23 +66,23 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
           />
         ))}
 
-     {filteredNavGroups.map((group) => (
-  <div key={group.label} className="mb-4">
-    {sidebarOpen && (
-      <p className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-slate-400">
-        {group.label}
-      </p>
-    )}
+        {filteredNavGroups.map((group) => (
+          <div key={group.label} className="mb-4">
+            {sidebarOpen && (
+              <p className="px-3 py-2 text-xs font-bold uppercase tracking-widest text-slate-400">
+                {group.label}
+              </p>
+            )}
 
-    {group.items.map((item) => (
-      <SidebarNavLink
-        key={item.path}
-        item={item}
-        sidebarOpen={sidebarOpen}
-      />
-    ))}
-  </div>
-))}
+            {group.items.map((item) => (
+              <SidebarNavLink
+                key={item.path}
+                item={item}
+                sidebarOpen={sidebarOpen}
+              />
+            ))}
+          </div>
+        ))}
       </nav>
     </aside>
   );
@@ -115,5 +115,3 @@ function SidebarNavLink({ item, sidebarOpen }) {
     </NavLink>
   );
 }
-
-

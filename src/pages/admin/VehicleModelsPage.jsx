@@ -5,6 +5,7 @@ import {
   createModel,
   updateModel,
   deleteModel,
+  toggleModel,
   restoreModel,
 } from "../../api/vehicles";
 import { useCallback, useEffect, useState } from "react";
@@ -27,18 +28,19 @@ function ModelFilter({ filterState, setFilterState }) {
     return () => clearTimeout(timer);
   }, [searchInput]);
   const statusOptions = [
+    { value: "all", label: "All" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ];
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-[1fr_170px] gap-3 px-2">
       <input
         type="text"
         placeholder="Search products..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="w-full g  px-3 py-2 rounded-xl border border-slate-200 text-sm  focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
       <Select
         options={statusOptions}
@@ -63,7 +65,7 @@ export default function VehicleModelsPage() {
     const res = await getModels({
       page,
       limit: 10,
-      status: filters.status || "active",
+      status: filters.status || "all",
       search: filters.search || "", // 👈 pass search term
     });
     return res;
@@ -78,9 +80,9 @@ export default function VehicleModelsPage() {
       fetchList={fetchList}
       createItem={createModel}
       updateItem={updateModel}
-     
       FilterComponent={ModelFilter}
       deleteItem={deleteModel}
+      toggleStatus={toggleModel}
       deleteEntityLabel="Vehicle Model"
       deleteChildWarning="associated generations"
       restoreItem={restoreModel}
@@ -90,7 +92,7 @@ export default function VehicleModelsPage() {
           key: "name",
           label: "Model",
           render: (row) => (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center sm:flex-row flex-col sm:justify-start justify-end gap-3">
               <ImageCell src={row.model_image_url} />
               <span className="font-medium">{row.name}</span>
             </div>

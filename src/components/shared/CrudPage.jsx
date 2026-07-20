@@ -10,7 +10,9 @@ import {
   ToggleLeft,
   ToggleRight,
   X,
+  GripVertical,
 } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PageHeader from "./PageHeader";
 import Pagination from "./Pagination";
 import Modal from "./Modal";
@@ -432,31 +434,107 @@ function FieldRenderer({ field, form, setForm, editingRow, idKey }) {
           {field.label}
         </label>
 
-        {/* //  Existing images */}
-        {editingRow && field.multiple === true && existingImages.length > 0 && (
-          <div className="flex flex-wrap gap-3">
-            {existingImages.map((img) => (
-              <div key={img.id} className="relative group">
-                <img
-                  src={img.image_url}
-                  alt="Existing"
-                  className="w-20 h-20 object-cover rounded-lg border border-slate-200"
-                />
-                {(field.deleteImage ||
-                  field.onPendingImageDelete ||
-                  !field.loadImages) && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(img.id)}
-                    className="absolute -top-2 -right-2 bg-rose-100 text-rose-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200"
+        {/* Existing images */}
+        {editingRow &&
+          field.multiple === true &&
+          existingImages.length > 0 &&
+          (field.onReorderImages ? (
+            <DragDropContext
+              onDragEnd={(result) => {
+                if (!result.destination) return;
+                const items = Array.from(existingImages);
+                const [moved] = items.splice(result.source.index, 1);
+                items.splice(result.destination.index, 0, moved);
+                const orderedIds = items.map((img) => img.id);
+                setExistingImages(items);
+                field
+                  .onReorderImages(editingRow[idKey], { orderedIds })
+                  .catch(() => {
+                    if (field.loadImages) {
+                      field
+                        .loadImages(editingRow[idKey])
+                        .then((res) => setExistingImages(res?.data || []));
+                    }
+                  });
+              }}
+            >
+              <Droppable droppableId="images-dnd" direction="horizontal">
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="flex flex-wrap gap-10"
                   >
-                    <X size={12} />
-                  </button>
+                    {existingImages.map((img, index) => (
+                      <Draggable
+                        key={img.id}
+                        draggableId={String(img.id)}
+                        index={index}
+                      >
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className={`relative group ${snapshot.isDragging ? "opacity-50" : ""}`}
+                          >
+                            <img
+                              src={img.image_url}
+                              alt="Existing"
+                              className="w-20 h-20 object-cover rounded-lg border border-slate-200"
+                            />
+                            <div
+                              {...provided.dragHandleProps}
+                              className="absolute -top-2 -left-2 bg-white rounded-full p-1 shadow cursor-grab hover:bg-slate-50 transition-colors z-10"
+                            >
+                              <GripVertical
+                                size={12}
+                                className="text-slate-600"
+                              />
+                            </div>
+                            {(field.deleteImage ||
+                              field.onPendingImageDelete ||
+                              !field.loadImages) && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveImage(img.id)}
+                                className="absolute -top-2 -right-2 bg-rose-100 text-rose-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200"
+                              >
+                                <X size={12} />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
                 )}
-              </div>
-            ))}
-          </div>
-        )}
+              </Droppable>
+            </DragDropContext>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {existingImages.map((img) => (
+                <div key={img.id} className="relative group">
+                  <img
+                    src={img.image_url}
+                    alt="Existing"
+                    className="w-20 h-20 object-cover rounded-lg border border-slate-200"
+                  />
+                  {(field.deleteImage ||
+                    field.onPendingImageDelete ||
+                    !field.loadImages) && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(img.id)}
+                      className="absolute -top-2 -right-2 bg-rose-100 text-rose-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
         {loadingImages && (
           <p className="text-xs text-slate-400">Loading images...</p>
         )}
@@ -694,40 +772,44 @@ function CreatableSelectField({ field, value, form, onChange }) {
             placeholder="Name"
             className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
-          <textarea
+          {/* <textarea
             value={createDesc}
             onChange={(e) => setCreateDesc(e.target.value)}
             placeholder="Description (optional)"
             rows={2}
             className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-          />
-          <div>
-            <label className="block text-[10px] font-semibold text-slate-500 mb-1">
-              Image (optional)
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
-              className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
-            />
-            {createImage && (
-              <div className="relative inline-block mt-2">
-                <img
-                  src={URL.createObjectURL(createImage)}
-                  alt="preview"
-                  className="h-16 w-16 object-cover rounded-lg border border-slate-200"
-                />
-                <button
-                  type="button"
-                  onClick={() => setCreateImage(null)}
-                  className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
-                >
-                  <X size={10} strokeWidth={3} />
-                </button>
-              </div>
-            )}
-          </div>
+          /> */}
+
+          {field.name === "sub_category_id" ? null : (
+            <div>
+              <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+                Image (optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCreateImage(e.target.files?.[0] || null)}
+                className="w-full text-xs file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-white file:text-primary file:font-medium file:text-xs hover:file:bg-slate-50 cursor-pointer"
+              />
+              {createImage && (
+                <div className="relative inline-block mt-2">
+                  <img
+                    src={URL.createObjectURL(createImage)}
+                    alt="preview"
+                    className="h-16 w-16 object-cover rounded-lg border border-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCreateImage(null)}
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+                  >
+                    <X size={10} strokeWidth={3} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -1282,7 +1364,7 @@ function VehicleSelectorField({
                 rows={2}
                 className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
               />
-              <div>
+              {/* <div>
                 <label className="block text-[10px] font-semibold text-slate-500 mb-1">
                   Image (optional)
                 </label>
@@ -1308,7 +1390,7 @@ function VehicleSelectorField({
                     </button>
                   </div>
                 )}
-              </div>
+              </div> */}
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -1645,7 +1727,7 @@ export default function CrudPage({
         const ok = await confirmToggle({
           title: "Change Status",
           content: "Are you sure you want to toggle the status?",
-          okText: "Toggle",
+          okText: "Change Status",
         });
         if (!ok) return;
 
@@ -1660,8 +1742,257 @@ export default function CrudPage({
     [toggleStatus, idKey, load],
   );
 
+  const renderCellValue = useCallback(
+    (row, col, idx) => {
+      if (col.render) {
+        return col.render(row, { load });
+      }
+
+      if (col.key === "status") {
+        return <StatusBadge status={row[col.key]} />;
+      }
+
+      if (col.key === "no") {
+        return (currentPage - 1) * limit + idx + 1;
+      }
+
+      if (col.key === "is_front") {
+        return <StatusBadge status={row[col.key] == 1 ? "Yes" : "No"} />;
+      }
+
+      return row[col.key] ?? "—";
+    },
+    [currentPage, limit, load],
+  );
   return (
-    <div className="min-h-screen p-6">
+    // <div className="min-h-screen p-2">
+    //   <PageHeader
+    //     title={title}
+    //     description={description}
+    //     actionLabel={
+    //       canCreate && createItem && !showDeleted ? createLabel : undefined
+    //     }
+    //     onAction={
+    //       canCreate && createItem && !showDeleted ? openCreate : undefined
+    //     }
+    //     extra={
+    //       <div className="flex  items-center gap-2">
+    //         {/* FIX: FilterComponent is now a controlled component */}
+    //         {FilterComponent && (
+    //           <FilterComponent
+    //             filterState={filterState}
+    //             setFilterState={handleFilterChange}
+    //           />
+    //         )}
+    //         {restoreItem && (
+    //           <button
+    //             type="button"
+    //             onClick={() => setShowDeleted((v) => !v)}
+    //             className={`p-2.5 flex items-center gap-3 rounded-xl border transition-colors ${
+    //               showDeleted
+    //                 ? "bg-amber-50 border-amber-300 text-amber-600"
+    //                 : "border-slate-200 hover:bg-slate-50 text-slate-600"
+    //             }`}
+    //             title={
+    //               showDeleted ? "Showing deleted items" : "Show deleted items"
+    //             }
+    //           >
+    //             <span className="text-sm">Deleted Products</span>{" "}
+    //             <Trash2 size={20} />
+    //           </button>
+    //         )}
+    //         <button
+    //           type="button"
+    //           onClick={load}
+    //           className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
+    //           title="Refresh"
+    //         >
+    //           <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+    //         </button>
+    //       </div>
+    //     }
+    //   />
+
+    //   <div className="border min-h-[400px] border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+    //     <div className="overflow-x-auto">
+    //       <table className="w-full text-left text-sm">
+    //         <thead className="bg-slate-50 border-b border-slate-100">
+    //           <tr>
+    //             {columns.map((col) => (
+    //               <th
+    //                 key={col.key}
+    //                 className="px-4 py-3 text-xs font-bold uppercase text-slate-500 whitespace-nowrap"
+    //               >
+    //                 {col.label}
+    //               </th>
+    //             ))}
+    //             {(canEdit || canDelete || toggleStatus || showDeleted) && (
+    //               <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500 text-right">
+    //                 {showDeleted ? "Restore" : "Actions"}
+    //               </th>
+    //             )}
+    //           </tr>
+    //         </thead>
+    //         <tbody className="divide-y divide-slate-50">
+    //           {loading ? (
+    //             <tr>
+    //               <td
+    //                 colSpan={columns.length + 1}
+    //                 className="px-4 py-12 text-center text-slate-400"
+    //               >
+    //                 <Loader2 className="inline animate-spin mr-2" size={18} />
+    //                 Loading...
+    //               </td>
+    //             </tr>
+    //           ) : rows.length === 0 ? (
+    //             <tr>
+    //               <td
+    //                 colSpan={columns.length + 1}
+    //                 className="px-4 py-12 text-center text-slate-400"
+    //               >
+    //                 {emptyMessage}
+    //               </td>
+    //             </tr>
+    //           ) : (
+    //             rows.map((row, idx) => (
+    //               <tr
+    //                 key={row[idKey]}
+    //                 className="hover:bg-primary-light/40 group"
+    //               >
+    //                 {columns.map((col) => (
+    //                   <td
+    //                     key={col.key}
+    //                     className="px-4 py-3 font-medium text-slate-500"
+    //                   >
+    //                     {col.render ? (
+    //                       col.render(row, { load })
+    //                     ) : col.key === "status" ? (
+    //                       <StatusBadge status={row[col.key]} />
+    //                     ) : col.key === "no" ? (
+    //                       (currentPage - 1) * limit + idx + 1
+    //                     ) : col.key === "is_front" ? (
+    //                       <StatusBadge
+    //                         status={row[col.key] == 1 ? "Yes" : " No"}
+    //                       />
+    //                     ) : (
+    //                       (row[col.key] ?? "—")
+    //                     )}
+    //                   </td>
+    //                 ))}
+    //                 {(canEdit || canDelete || toggleStatus || showDeleted) && (
+    //                   <td className="px-4 py-3 text-right">
+    //                     <div className="inline-flex gap-1">
+    //                       {showDeleted && restoreItem ? (
+    //                         <button
+    //                           type="button"
+    //                           onClick={() => handleRestore(row)}
+    //                           className="p-2 rounded-lg border border-amber-200 hover:border-amber-400 hover:text-amber-600 text-amber-500 transition-colors"
+    //                           title="Restore item"
+    //                         >
+    //                           <RotateCcw size={16} />
+    //                         </button>
+    //                       ) : (
+    //                         <>
+    //                           {toggleStatus && (
+    //                             <button
+    //                               type="button"
+    //                               onClick={() => handleToggle(row)}
+    //                               className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
+    //                               title="Toggle status"
+    //                             >
+    //                               {row.status === "active" ? (
+    //                                 <ToggleRight size={16} />
+    //                               ) : (
+    //                                 <ToggleLeft size={16} />
+    //                               )}
+    //                             </button>
+    //                           )}
+    //                           {canEdit && (updateItem || onEditRow) && (
+    //                             <button
+    //                               type="button"
+    //                               onClick={() => openEdit(row)}
+    //                               className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
+    //                             >
+    //                               <Edit3 size={16} />
+    //                             </button>
+    //                           )}
+    //                           {canDelete && deleteItem && (
+    //                             <button
+    //                               type="button"
+    //                               onClick={() => handleDelete(row)}
+    //                               className="p-2 rounded-lg border border-slate-200 hover:border-rose-200 hover:text-rose-600 transition-colors"
+    //                             >
+    //                               <Trash2 size={16} />
+    //                             </button>
+    //                           )}
+    //                         </>
+    //                       )}
+    //                     </div>
+    //                   </td>
+    //                 )}
+    //               </tr>
+    //             ))
+    //           )}
+    //         </tbody>
+    //       </table>
+    //     </div>
+    //     <Pagination
+    //       page={page}
+    //       totalPages={totalPages}
+    //       onPageChange={setPage}
+    //     />
+    //   </div>
+
+    //   {/* Edit/Create Modal */}
+    //   {formFields.length > 0 && (createItem || updateItem) && (
+    //     <Modal
+    //       open={modalOpen}
+    //       onClose={() => {
+    //         onModalClose?.();
+    //         setModalOpen(false);
+    //       }}
+    //       title={editingRow ? `Edit ${title}` : `Create ${title}`}
+    //       wide={modalWide}
+    //     >
+    //       <form
+    //         onSubmit={handleSubmit}
+    //         className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4"
+    //       >
+    //         {formFields.map((field) => (
+    //           <FieldRenderer
+    //             key={field.name}
+    //             field={field}
+    //             form={form}
+    //             setForm={setForm}
+    //             editingRow={editingRow}
+    //             idKey={idKey}
+    //           />
+    //         ))}
+    //         <div className="col-span-2 flex justify-end gap-2 pt-4 border-t border-slate-100">
+    //           <button
+    //             type="button"
+    //             onClick={() => {
+    //               onModalClose?.();
+    //               setModalOpen(false);
+    //             }}
+    //             className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100"
+    //           >
+    //             Cancel
+    //           </button>
+    //           <button
+    //             type="submit"
+    //             disabled={saving}
+    //             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-semibold disabled:opacity-60"
+    //           >
+    //             <Save size={16} />
+    //             {saving ? "Saving..." : editingRow ? "Update" : "Create"}
+    //           </button>
+    //         </div>
+    //       </form>
+    //     </Modal>
+    //   )}
+    // </div>
+    <div className="min-h-screen">
       <PageHeader
         title={title}
         description={description}
@@ -1672,63 +2003,187 @@ export default function CrudPage({
           canCreate && createItem && !showDeleted ? openCreate : undefined
         }
         extra={
-          <div className="flex items-center gap-2">
-            {/* FIX: FilterComponent is now a controlled component */}
+          <div className="flex w-full flex-col gap-2  sm:flex-row sm:flex-wrap sm:items-center">
             {FilterComponent && (
-              <FilterComponent
-                filterState={filterState}
-                setFilterState={handleFilterChange}
-              />
+              <div className="w-full  sm:w-auto">
+                <FilterComponent
+                  filterState={filterState}
+                  setFilterState={handleFilterChange}
+                />
+              </div>
             )}
-            {restoreItem && (
+
+            <div className="flex items-center justify-center gap-2">
+              {restoreItem && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleted((value) => !value)}
+                  className={`flex w-fit flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors sm:flex-none ${
+                    showDeleted
+                      ? "border-amber-300 bg-amber-50 text-amber-600"
+                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                  }`}
+                  title={
+                    showDeleted ? "Showing deleted items" : "Show deleted items"
+                  }
+                >
+                  <Trash2 size={18} />
+
+                  <span className="sm:hidden">
+                    {showDeleted ? "Deleted" : "Recycle Bin"}
+                  </span>
+
+                  <span className="hidden lg:inline">
+                    {showDeleted ? "Showing Deleted" : "Deleted Products"}
+                  </span>
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => setShowDeleted((v) => !v)}
-                className={`p-2.5 flex items-center gap-3 rounded-xl border transition-colors ${
-                  showDeleted
-                    ? "bg-amber-50 border-amber-300 text-amber-600"
-                    : "border-slate-200 hover:bg-slate-50 text-slate-600"
-                }`}
-                title={
-                  showDeleted ? "Showing deleted items" : "Show deleted items"
-                }
+                onClick={load}
+                className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:bg-slate-50"
+                title="Refresh"
               >
-                <span className="text-sm">Deleted Products</span>{" "}
-                <Trash2 size={20} />
+                <RefreshCw
+                  size={18}
+                  className={loading ? "animate-spin" : ""}
+                />
               </button>
-            )}
-            <button
-              type="button"
-              onClick={load}
-              className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
-              title="Refresh"
-            >
-              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            </button>
+            </div>
           </div>
         }
       />
 
-      <div className="border min-h-[400px] border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 border-b border-slate-100">
+      <div className="min-h-[400px] overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+        {/* Mobile loading */}
+        {loading && (
+          <div className="flex min-h-[300px] items-center justify-center text-sm text-slate-400 md:hidden">
+            <Loader2 className="mr-2 animate-spin" size={18} />
+            Loading...
+          </div>
+        )}
+
+        {/* Mobile empty state */}
+        {!loading && rows.length === 0 && (
+          <div className="flex min-h-[300px] items-center justify-center px-4 text-center text-sm text-slate-400 md:hidden">
+            {emptyMessage}
+          </div>
+        )}
+
+        {/* Mobile card view */}
+        {!loading && rows.length > 0 && (
+          <div className="space-y-3 bg-slate-50/60 p-3 md:hidden">
+            {rows.map((row, idx) => (
+              <div
+                key={row[idKey]}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+              >
+                <div className="space-y-3 p-4">
+                  {columns.map((col, colIndex) => {
+                    const value = renderCellValue(row, col, idx);
+
+                    return (
+                      <div
+                        key={col.key}
+                        className={`flex gap-3 ${
+                          colIndex === 0
+                            ? "items-start"
+                            : "items-center border-t border-slate-100 pt-3"
+                        }`}
+                      >
+                        <div className="w-[105px] shrink-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          {col.label}
+                        </div>
+
+                        <div className="min-w-0 flex-1 break-words text-right text-sm font-medium text-slate-700">
+                          {value}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {(canEdit || canDelete || toggleStatus || showDeleted) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 border-t border-slate-100 bg-slate-50/70 px-4 py-3">
+                    {showDeleted && restoreItem ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRestore(row)}
+                        className="inline-flex w-full items-center gap-2 rounded-lg border border-amber-200 bg-white px-3 py-2 text-xs font-semibold text-amber-600 transition-colors hover:border-amber-400"
+                      >
+                        <RotateCcw size={16} />
+                        Restore
+                      </button>
+                    ) : (
+                      <>
+                        {toggleStatus && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggle(row)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600"
+                          >
+                            {row.status === "active" ? (
+                              <ToggleRight size={17} />
+                            ) : (
+                              <ToggleLeft size={17} />
+                            )}
+                            Change Status
+                          </button>
+                        )}
+
+                        {canEdit && (updateItem || onEditRow) && (
+                          <button
+                            type="button"
+                            onClick={() => openEdit(row)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:border-primary/30 hover:text-primary"
+                          >
+                            <Edit3 size={16} />
+                            Edit Product
+                          </button>
+                        )}
+
+                        {canDelete && deleteItem && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(row)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50"
+                          >
+                            <Trash2 size={16} />
+                            Delete Product
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Desktop table view */}
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-max text-left text-sm">
+            <thead className="border-b border-slate-100 bg-slate-50">
               <tr>
                 {columns.map((col) => (
                   <th
                     key={col.key}
-                    className="px-4 py-3 text-xs font-bold uppercase text-slate-500 whitespace-nowrap"
+                    className="whitespace-nowrap px-4 py-3 text-xs font-bold uppercase text-slate-500"
                   >
                     {col.label}
                   </th>
                 ))}
+
                 {(canEdit || canDelete || toggleStatus || showDeleted) && (
-                  <th className="px-4 py-3 text-xs font-bold uppercase text-slate-500 text-right">
+                  <th className="whitespace-nowrap px-4 py-3 text-right text-xs font-bold uppercase text-slate-500">
                     {showDeleted ? "Restore" : "Actions"}
                   </th>
                 )}
               </tr>
             </thead>
+
             <tbody className="divide-y divide-slate-50">
               {loading ? (
                 <tr>
@@ -1736,7 +2191,7 @@ export default function CrudPage({
                     colSpan={columns.length + 1}
                     className="px-4 py-12 text-center text-slate-400"
                   >
-                    <Loader2 className="inline animate-spin mr-2" size={18} />
+                    <Loader2 className="mr-2 inline animate-spin" size={18} />
                     Loading...
                   </td>
                 </tr>
@@ -1753,28 +2208,17 @@ export default function CrudPage({
                 rows.map((row, idx) => (
                   <tr
                     key={row[idKey]}
-                    className="hover:bg-primary-light/40 group"
+                    className="group hover:bg-primary-light/40"
                   >
                     {columns.map((col) => (
                       <td
                         key={col.key}
                         className="px-4 py-3 font-medium text-slate-500"
                       >
-                        {col.render ? (
-                          col.render(row, { load })
-                        ) : col.key === "status" ? (
-                          <StatusBadge status={row[col.key]} />
-                        ) : col.key === "no" ? (
-                          (currentPage - 1) * limit + idx + 1
-                        ) : col.key === "is_front" ? (
-                          <StatusBadge
-                            status={row[col.key] == 1 ? "Yes" : " No"}
-                          />
-                        ) : (
-                          (row[col.key] ?? "—")
-                        )}
+                        {renderCellValue(row, col, idx)}
                       </td>
                     ))}
+
                     {(canEdit || canDelete || toggleStatus || showDeleted) && (
                       <td className="px-4 py-3 text-right">
                         <div className="inline-flex gap-1">
@@ -1782,7 +2226,7 @@ export default function CrudPage({
                             <button
                               type="button"
                               onClick={() => handleRestore(row)}
-                              className="p-2 rounded-lg border border-amber-200 hover:border-amber-400 hover:text-amber-600 text-amber-500 transition-colors"
+                              className="rounded-lg border border-amber-200 p-2 text-amber-500 transition-colors hover:border-amber-400 hover:text-amber-600"
                               title="Restore item"
                             >
                               <RotateCcw size={16} />
@@ -1793,7 +2237,7 @@ export default function CrudPage({
                                 <button
                                   type="button"
                                   onClick={() => handleToggle(row)}
-                                  className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
+                                  className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-primary/30 hover:text-primary"
                                   title="Toggle status"
                                 >
                                   {row.status === "active" ? (
@@ -1803,20 +2247,24 @@ export default function CrudPage({
                                   )}
                                 </button>
                               )}
+
                               {canEdit && (updateItem || onEditRow) && (
                                 <button
                                   type="button"
                                   onClick={() => openEdit(row)}
-                                  className="p-2 rounded-lg border border-slate-200 hover:border-primary/30 hover:text-primary transition-colors"
+                                  className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-primary/30 hover:text-primary"
+                                  title="Edit"
                                 >
                                   <Edit3 size={16} />
                                 </button>
                               )}
+
                               {canDelete && deleteItem && (
                                 <button
                                   type="button"
                                   onClick={() => handleDelete(row)}
-                                  className="p-2 rounded-lg border border-slate-200 hover:border-rose-200 hover:text-rose-600 transition-colors"
+                                  className="rounded-lg border border-slate-200 p-2 transition-colors hover:border-rose-200 hover:text-rose-600"
+                                  title="Delete"
                                 >
                                   <Trash2 size={16} />
                                 </button>
@@ -1832,11 +2280,14 @@ export default function CrudPage({
             </tbody>
           </table>
         </div>
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
+
+        <div className="border-t border-slate-100 px-2 py-2 sm:px-4">
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </div>
       </div>
 
       {/* Edit/Create Modal */}
@@ -1852,7 +2303,7 @@ export default function CrudPage({
         >
           <form
             onSubmit={handleSubmit}
-            className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4"
+            className="grid max-h-[calc(100vh-100px)] grid-cols-1 gap-3 overflow-y-auto p-3 sm:p-4 md:grid-cols-2 md:gap-4 md:p-6"
           >
             {formFields.map((field) => (
               <FieldRenderer
@@ -1864,21 +2315,23 @@ export default function CrudPage({
                 idKey={idKey}
               />
             ))}
-            <div className="col-span-2 flex justify-end gap-2 pt-4 border-t border-slate-100">
+
+            <div className="col-span-1 flex flex-col-reverse gap-2 border-t border-slate-100 pt-4 sm:flex-row sm:justify-end md:col-span-2">
               <button
                 type="button"
                 onClick={() => {
                   onModalClose?.();
                   setModalOpen(false);
                 }}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100"
+                className="w-full rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 sm:w-auto"
               >
                 Cancel
               </button>
+
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-sm font-semibold disabled:opacity-60"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
               >
                 <Save size={16} />
                 {saving ? "Saving..." : editingRow ? "Update" : "Create"}
@@ -1896,12 +2349,12 @@ function ImageCell({ src, alt, className = "" }) {
   const [open, setOpen] = useState(false);
   if (!src) return null;
   return (
-    <>
+    <div className="flex sm:flex-row flex-col">
       <button type="button" onClick={() => setOpen(true)} className="shrink-0">
         <img
           src={src}
           alt={alt || ""}
-          className={`w-8 h-8 rounded-lg object-cover border border-slate-200 hover:opacity-80 transition-opacity ${className}`}
+          className={`w-30 sm:w-8 rounded-lg object-cover border border-slate-200 hover:opacity-80 transition-opacity ${className}`}
         />
       </button>
       <Modal open={open} onClose={() => setOpen(false)}>
@@ -1913,7 +2366,7 @@ function ImageCell({ src, alt, className = "" }) {
           />
         </div>
       </Modal>
-    </>
+    </div>
   );
 }
 

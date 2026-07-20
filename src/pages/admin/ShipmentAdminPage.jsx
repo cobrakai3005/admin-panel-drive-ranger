@@ -92,10 +92,8 @@ export default function ShipmentAdmin() {
   };
 
   const handleQuickAddEvent = async (eventName) => {
- 
     setAddingEvent(true);
     try {
-   
       await updateShipmentStatus(detailModal.id, eventName);
       const shipment = await getShipment(detailModal.id);
       setDetailModal(shipment);
@@ -271,14 +269,11 @@ export default function ShipmentAdmin() {
             type: "select",
             options: [
               { id: "pending", name: "Pending" },
-              { id: "assigned", name: "Assigned" },
-              { id: "picked_up", name: "Picked Up" },
-              { id: "in_transit", name: "In Transit" },
-              { id: "out_for_delivery", name: "Out for Delivery" },
-              { id: "delivered", name: "Delivered" },
-              { id: "failed", name: "Failed" },
-              { id: "returned", name: "Returned" },
-              { id: "cancelled", name: "Cancelled" },
+              { id: "processing", name: "PROCESSING" },
+              { id: "shipped", name: "SHIPPED" },
+              { id: "delivered", name: "DELLIVERED" },
+              { id: "cancelled", name: "CANCELLED" },
+              { id: "returned", name: "RETURNED" },
             ],
             optionValue: "id",
             optionLabel: "name",

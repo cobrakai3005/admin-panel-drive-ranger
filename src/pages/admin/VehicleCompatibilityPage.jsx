@@ -51,7 +51,7 @@ export function CompatibilityFilter({ filterState, setFilterState }) {
   // ];
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="grid grid-cols-1">
       <Select
         options={productOptions}
         value={selectedOption}
@@ -59,7 +59,7 @@ export function CompatibilityFilter({ filterState, setFilterState }) {
         isLoading={loading}
         isClearable
         placeholder="All Products"
-        className="min-w-[200px] text-sm"
+        className="w-[430px] text-sm"
         classNamePrefix="react-select"
         styles={{
           control: (base) => ({

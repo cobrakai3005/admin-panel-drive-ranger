@@ -30,3 +30,6 @@ export const fetchBrandOptions = async () => {
   const res = await getBrands({ limit: 100 });
   return res.data || [];
 };
+
+export const toggleBrandsStatus = (id) =>
+  api.patch(`/brands/toggle_status/${id}`).then(unwrap);

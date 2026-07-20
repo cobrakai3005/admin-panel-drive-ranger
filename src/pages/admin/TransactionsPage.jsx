@@ -30,20 +30,20 @@ function TransactionFilter({ filterState, setFilterState }) {
   }, [searchInput]);
 
   return (
-    <div className="flex items-center gap-3">
-      <input
+    <div className="grid grid-cols-1   gap-3">
+      {/* <input
         type="text"
         placeholder="Search by order ID or ref..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-      />
+        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+      /> */}
       <select
         value={filterState.status || ""}
         onChange={(e) =>
           setFilterState({ ...filterState, status: e.target.value })
         }
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm"
+        className="px-3 py-2 w-full rounded-xl border border-slate-200 text-sm"
       >
         <option value="">All Statuses</option>
         <option value="pending">Pending</option>

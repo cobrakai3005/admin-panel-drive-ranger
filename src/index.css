@@ -10,6 +10,10 @@
   --color-main: #a0070c;       
   --color-main-light: #fff1f2; 
 }
+.jj{
+background: #52B788	;
+
+}
 
 /* Match 'green' from your handleThemeChange('green') */
 [data-theme='green'] {

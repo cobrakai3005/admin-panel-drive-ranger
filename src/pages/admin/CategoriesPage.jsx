@@ -39,23 +39,27 @@ function CategoryFilters({ filterState, setFilterState }) {
     setFilterState((prev) => ({ ...prev, status: e.target.value }));
   };
   const statusOptions = [
+    { value: "all", label: "ALl" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ];
 
   return (
-    <div className="flex items-center gap-3">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 
+     gap-3"
+    >
       <input
         type="text"
         placeholder="Search categories..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
       <Select
         options={statusOptions}
         value={statusOptions.find(
-          (option) => option.value === (filterState.status || "active"),
+          (option) => option.value === (filterState.status || "all"),
         )}
         onChange={(selected) =>
           setFilterState((prev) => ({
@@ -64,7 +68,7 @@ function CategoryFilters({ filterState, setFilterState }) {
           }))
         }
         isSearchable={false}
-        className="min-w-[180px] text-sm"
+        className=" text-sm"
         classNamePrefix="react-select"
       />
     </div>
@@ -95,7 +99,6 @@ export default function CategoriesPage() {
       deleteChildWarning="associated products"
       toggleStatus={toggleCategoryStatus}
       restoreItem={restoreCategory}
-    
       FilterComponent={CategoryFilters}
       columns={[
         { key: "no", label: "Serial" },
@@ -103,25 +106,29 @@ export default function CategoriesPage() {
           key: "name",
           label: "Name",
           render: (row) => (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center sm:flex-row flex-col sm:justify-start justify-end gap-3">
               <ImageCell src={row.image_url} />
               <span className="font-medium">{row.name}</span>
             </div>
           ),
         },
 
-        { key: "description", label: "Description" },
+        {
+          key: "description",
+          label: "Description",
+          render: (row) => <div className="w-48">{row.description}</div>,
+        },
         { key: "is_front", label: "Put In Front" },
         { key: "status", label: "Status" },
       ]}
       formFields={[
         { name: "name", label: "Name", required: true, colSpan: 2 },
-        {
-          name: "description",
-          label: "Description",
-          type: "textarea",
-          colSpan: 2,
-        },
+        // {
+        //   name: "description",
+        //   label: "Description",
+        //   type: "textarea",
+        //   colSpan: 2,
+        // },
         { name: "is_front", label: "Is Front ", type: "checkbox" },
         {
           name: "status",

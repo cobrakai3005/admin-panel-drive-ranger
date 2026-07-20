@@ -15,6 +15,7 @@ import {
   restoreProductApi,
   getProductImagesApi,
   deleteProductImageApi,
+  reorderProductImagesApi,
 } from "../../api/products";
 import { useCallback, useState, useEffect, useRef } from "react";
 import Select from "react-select";
@@ -43,9 +44,9 @@ function ProductFilters({ filterState, setFilterState }) {
   }, [searchInput, setFilterState]);
 
   const statusOptions = [
+    { value: "all", label: "All" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
-    { value: "all", label: "All" },
   ];
   const sortOptions = [
     { value: "price_low_high", label: "Price: Low to High" },
@@ -55,9 +56,8 @@ function ProductFilters({ filterState, setFilterState }) {
   ];
 
   const currentStatus =
-    statusOptions.find(
-      (opt) => opt.value === (filterState.status || "active"),
-    ) || statusOptions[0];
+    statusOptions.find((opt) => opt.value === (filterState.status || "all")) ||
+    statusOptions[0];
 
   const currentSort =
     sortOptions.find((opt) => opt.value === (filterState.sort || "latest")) ||
@@ -65,14 +65,36 @@ function ProductFilters({ filterState, setFilterState }) {
 
   //#4f46e5
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
       <input
         type="text"
         placeholder="Search products..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="px-3 py-2 w-full  rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
+
+      <Select
+        options={sortOptions}
+        value={currentSort}
+        onChange={(selected) =>
+          setFilterState((prev) => ({
+            ...prev,
+            sort: selected.value,
+          }))
+        }
+        isSearchable={false}
+        className="  text-sm"
+        classNamePrefix="react-select"
+        styles={{
+          control: (base) => ({
+            ...base,
+            borderRadius: "0.75rem",
+            minHeight: "40px",
+          }),
+        }}
+      />
+
       <Select
         options={statusOptions}
         value={currentStatus}
@@ -86,32 +108,12 @@ function ProductFilters({ filterState, setFilterState }) {
         // classNames="min-w-[140px] text-sm "
         classNames={{
           control: ({ isFocused }) =>
-            `border ${
+            `border  ${
               isFocused
                 ? "border-indigo-500 ring-2 ring-indigo-200"
                 : "border-zinc-300"
             }`,
         }}
-        classNamePrefix="react-select"
-        styles={{
-          control: (base) => ({
-            ...base,
-            borderRadius: "0.75rem",
-            minHeight: "40px",
-          }),
-        }}
-      />
-      <Select
-        options={sortOptions}
-        value={currentSort}
-        onChange={(selected) =>
-          setFilterState((prev) => ({
-            ...prev,
-            sort: selected.value,
-          }))
-        }
-        isSearchable={false}
-        className="min-w-[140px] text-sm"
         classNamePrefix="react-select"
         styles={{
           control: (base) => ({
@@ -156,7 +158,7 @@ export default function ProductsAdminPage() {
     const res = await getAllProductsApi({
       page,
       limit: 10,
-      status: filters.status || "active",
+      status: filters.status || "all",
       search: filters.search || "",
       sort_by: filters.sort || "latest",
     });
@@ -235,7 +237,7 @@ export default function ProductsAdminPage() {
           key: "name",
           label: "Product",
           render: (row) => (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center sm:flex-row w-48 flex-col sm:justify-start gap-10 justify-end gap-3">
               <ImageCell src={row.media?.[0]?.image_url} />
               <span className="font-medium text-slate-800">{row.name}</span>
             </div>
@@ -400,6 +402,8 @@ export default function ProductsAdminPage() {
           loadImages: (productId) => getProductImagesApi(productId),
           onPendingImageDelete: (imageId) =>
             pendingImageDeletionsRef.current.push(imageId),
+          onReorderImages: (productId, reorderData) =>
+            reorderProductImagesApi(productId, reorderData),
         },
 
         {
@@ -475,7 +479,7 @@ export default function ProductsAdminPage() {
 
         {
           name: "short_description",
-          label: "Short Description",
+          label: "Details",
           type: "textarea",
           colSpan: 2,
           rows: 2,
@@ -484,11 +488,20 @@ export default function ProductsAdminPage() {
 
         {
           name: "long_description",
-          label: "Long Description",
+          label: "Features",
           type: "textarea",
           rows: 5,
           colSpan: 2,
           placeholder: "Detailed product information",
+        },
+
+        {
+          name: "seo_description",
+          label: "Specifications",
+          type: "textarea",
+          colSpan: 2,
+          rows: 2,
+          placeholder: "Meta description for search engines",
         },
 
         {
@@ -503,15 +516,6 @@ export default function ProductsAdminPage() {
           label: "SEO Keywords",
           colSpan: 2,
           placeholder: "Comma-separated keywords",
-        },
-
-        {
-          name: "seo_description",
-          label: "SEO Description",
-          type: "textarea",
-          colSpan: 2,
-          rows: 2,
-          placeholder: "Meta description for search engines",
         },
 
         {

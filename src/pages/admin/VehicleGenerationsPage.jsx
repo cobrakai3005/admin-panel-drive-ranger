@@ -6,6 +6,7 @@ import {
   updateGeneration,
   deleteGeneration,
   restoreGeneration,
+  toggleGeneration,
 } from "../../api/vehicles";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -38,6 +39,7 @@ function GenerationFilters({ filterState, setFilterState }) {
     setFilterState((prev) => ({ ...prev, status: e.target.value }));
   };
   const statusOptions = [
+    { value: "all", label: "All" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ];
@@ -81,13 +83,14 @@ export default function VehicleGenerationsPage() {
         getGenerations({
           page,
           limit: 10,
-          status: filters.status || "active",
+          status: filters.status || "all",
           search: filters.search || "",
         })
       }
       createItem={createGeneration}
       updateItem={updateGeneration}
       deleteItem={deleteGeneration}
+      toggleStatus={toggleGeneration}
       deleteEntityLabel="Vehicle Generation"
       deleteChildWarning="vehicle compatibility records"
       restoreItem={restoreGeneration}

@@ -28,7 +28,8 @@ export const updateMake = (id, data) =>
 
 export const deleteMake = (id) =>
   api.delete(`/vehicle-makes/delete_make/${id}`).then(unwrap);
-
+export const toggleMakes = (id) =>
+  api.patch(`/vehicle-makes/toggle_status/${id}`).then(unwrap);
 // ============================================
 // VEHICLE MODELS
 // ============================================
@@ -56,6 +57,9 @@ export const deleteModel = (id) =>
   api.delete(`/vehicle-models/delete_model/${id}`).then(unwrap);
 export const restoreModel = (id) =>
   api.get(`/vehicle-models/restore/${id}`).then(unwrap);
+
+export const toggleModel = (id) =>
+  api.patch(`/vehicle-models/toggle_status/${id}`).then(unwrap);
 // ============================================
 // VEHICLE GENERATIONS
 // ============================================
@@ -70,7 +74,8 @@ export const createGeneration = (data) =>
 
 export const updateGeneration = (id, data) =>
   api.put(`/vehicle-generations/update_generation/${id}`, data).then(unwrap);
-
+export const toggleGeneration = (id) =>
+  api.patch(`/vehicle-generations/toggle_status/${id}`).then(unwrap);
 export const deleteGeneration = (id) =>
   api.delete(`/vehicle-generations/delete_generation/${id}`).then(unwrap);
 

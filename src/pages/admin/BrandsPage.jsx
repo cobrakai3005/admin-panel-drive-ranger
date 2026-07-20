@@ -5,6 +5,7 @@ import {
   updateBrand,
   deleteBrand,
   restoreBrand,
+  toggleBrandsStatus
 } from "../../api/brands";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -26,23 +27,24 @@ function BrandFilters({ filterState, setFilterState }) {
     return () => clearTimeout(timer);
   }, [searchInput]);
   const statusOptions = [
+    { value: "all", label: "All" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
   ];
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2  gap-3">
       <input
         type="text"
         placeholder="Search products..."
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
-        className="px-3 py-2 rounded-xl border border-slate-200 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm w focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
       />
       <Select
         options={statusOptions}
         value={statusOptions.find(
-          (option) => option.value === (filterState.status || "active"),
+          (option) => option.value === (filterState.status || "all"),
         )}
         onChange={(selected) =>
           setFilterState((prev) => ({
@@ -78,6 +80,7 @@ export default function BrandsPage() {
       createItem={createBrand}
       updateItem={updateBrand}
       deleteItem={deleteBrand}
+      toggleStatus={toggleBrandsStatus}
       deleteEntityLabel="Brand"
       deleteChildWarning="associated products"
       restoreItem={restoreBrand}
@@ -88,7 +91,7 @@ export default function BrandsPage() {
           key: "name",
           label: "Brand",
           render: (row) => (
-            <div className="flex items-center gap-3">
+            <div className="w-48 flex items-center gap-3">
               <ImageCell
                 src={row.logo_url}
                 className="object-contain bg-slate-50"

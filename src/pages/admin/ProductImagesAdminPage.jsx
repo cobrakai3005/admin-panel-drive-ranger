@@ -180,10 +180,10 @@ export default function ProductImagesAdminPage() {
     }));
 
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center flex-wrap gap-3">
         <label className="text-sm font-medium text-slate-700">Product:</label>
 
-        <div className="min-w-[300px]">
+        <div className="">
           <Select
             options={options}
             value={options.find((opt) => opt.value === productId) || null}
@@ -192,7 +192,7 @@ export default function ProductImagesAdminPage() {
             isClearable
             classNames={{
               control: () =>
-                "rounded-xl border border-slate-200 min-h-[42px] shadow-none hover:border-slate-300",
+                "rounded-xl border border-slate-200  shadow-none hover:border-slate-300",
               menu: () => "rounded-xl overflow-hidden",
               option: ({ isFocused, isSelected }) =>
                 `${isSelected ? "bg-indigo-600 text-white" : isFocused ? "bg-indigo-50" : ""}`,
@@ -237,7 +237,7 @@ export default function ProductImagesAdminPage() {
         actionLabel={productId ? "Upload Image" : undefined}
         onAction={productId ? () => setUploadModalOpen(true) : undefined}
         extra={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-4">
             {renderProductSelector()}
             {/* Show Inactive Toggle */}
             {productId && (
@@ -257,7 +257,7 @@ export default function ProductImagesAdminPage() {
             <button
               type="button"
               onClick={loadImages}
-              className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
+              className="p-2.5 w-fit rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
               title="Refresh"
               disabled={!productId}
             >
